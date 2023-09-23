@@ -1,0 +1,1019 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://blog.seeyourface.cn/blog/pixel.png">
+  <link rel="icon" href="https://blog.seeyourface.cn/blog/pixel.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yang Lei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="JDK工具使用指南jps该命令用于打印当前JVM中运行的Java进程状态信息 1jps [options] [hostid]  options表示命令可选参数：  -q：仅显示pid -m：显示进程pid及main方法参数 -l：打印进程对应JAR文件所在的完整路径名 -v：查看进程pid及JVM参数 -h：打印帮助信息  jinfo用于打印全部参数和系统属性 1jinfo [options] &amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JDK工具包">
+<meta property="og:url" content="https://seeyourface.com/2023/09/23/JDK%E5%B7%A5%E5%85%B7%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/index.html">
+<meta property="og:site_name" content="Keinmal">
+<meta property="og:description" content="JDK工具使用指南jps该命令用于打印当前JVM中运行的Java进程状态信息 1jps [options] [hostid]  options表示命令可选参数：  -q：仅显示pid -m：显示进程pid及main方法参数 -l：打印进程对应JAR文件所在的完整路径名 -v：查看进程pid及JVM参数 -h：打印帮助信息  jinfo用于打印全部参数和系统属性 1jinfo [options] &amp;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-09-23T06:27:26.000Z">
+<meta property="article:modified_time" content="2023-09-23T06:50:47.660Z">
+<meta property="article:author" content="Yang Lei">
+<meta property="article:tag" content="调优">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>JDK工具包 - Keinmal</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"seeyourface.com","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":100,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Keinmal</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://blog.seeyourface.cn/blog/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="JDK工具包"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-09-23 14:27" pubdate>
+          2023年9月23日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          22 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">JDK工具包</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="JDK工具使用指南"><a href="#JDK工具使用指南" class="headerlink" title="JDK工具使用指南"></a>JDK工具使用指南</h3><h4 id="jps"><a href="#jps" class="headerlink" title="jps"></a>jps</h4><p><strong>该命令用于打印当前JVM中运行的Java进程状态信息</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">jps [options] [<span class="hljs-built_in">hostid</span>]<br></code></pre></td></tr></table></figure>
+
+<p><code>options</code>表示命令可选参数：</p>
+<ul>
+<li>-q：仅显示pid</li>
+<li>-m：显示进程pid及main方法参数</li>
+<li>-l：打印进程对应JAR文件所在的完整路径名</li>
+<li>-v：查看进程pid及JVM参数</li>
+<li>-h：打印帮助信息</li>
+</ul>
+<h4 id="jinfo"><a href="#jinfo" class="headerlink" title="jinfo"></a>jinfo</h4><p><strong>用于打印全部参数和系统属性</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">jinfo [options] &lt;pid&gt;<br></code></pre></td></tr></table></figure>
+
+<p>options表示命令可选参数：</p>
+<ul>
+<li>-[pid]：输出全部参数</li>
+<li>-flag [name] pid：打印对应名称的参数内容</li>
+<li>-flag [+|-] [name] pid：不重启虚拟机的情况下，动态修改JVM参数</li>
+<li>-flag [name]&#x3D;[value]：不重启虚拟机的情况下，动态修改JVM参数</li>
+</ul>
+<h4 id="jstat"><a href="#jstat" class="headerlink" title="jstat"></a>jstat</h4><p><strong>对Java应用程序的性能和资源进行实时监控，包括Heap和垃圾回收状态的监控</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">jstat -[options] [-t] [-h&lt;lines&gt;] &lt;vmid&gt; [&lt;interval&gt; [&lt;count&gt;]]<br></code></pre></td></tr></table></figure>
+
+<p>其中，vmid为虚拟机id，Liunx&#x2F;Unix一般为pid，interval为采样间隔（ms），count为采样数</p>
+<p><code>jstat -gc 54231 1000 3</code> 表示每隔1000ms打印一次pid为54231的进程GC信息，总共打印三次</p>
+<p>options表示命令可选参数：</p>
+<ul>
+<li><p>-class：显示加载class的数量及所占空间等信息</p>
+</li>
+<li><p>-compiler：JIT即时编译器相关的统计信息</p>
+</li>
+<li><p>-gc：打印GC信息（展开查看参数说明）</p>
+</li>
+<li><p>-gccapacity：打印各个内存池分代空间的容量</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NGCMN</td>
+<td>年轻代(young)中初始化(最小)的大小(字节)</td>
+</tr>
+<tr>
+<td>NGCMX</td>
+<td>年轻代(young)的最大容量(字节)</td>
+</tr>
+<tr>
+<td>NGC</td>
+<td>年轻代(young)中当前的容量(字节)</td>
+</tr>
+<tr>
+<td>S0C</td>
+<td>年轻代中第一个survivor（幸存区）的容量(字节)</td>
+</tr>
+<tr>
+<td>S1C</td>
+<td>年轻代中第二个survivor（幸存区）的容量(字节)</td>
+</tr>
+<tr>
+<td>EC</td>
+<td>年轻代中Eden（伊甸园）的容量(字节)</td>
+</tr>
+<tr>
+<td>OGCMN</td>
+<td>old代中初始化(最小)的大小(字节)</td>
+</tr>
+<tr>
+<td>OGCMX</td>
+<td>old代的最大容量(字节)</td>
+</tr>
+<tr>
+<td>OGC</td>
+<td>old代当前新生成的容量(字节)</td>
+</tr>
+<tr>
+<td>OC</td>
+<td>Old代的容量(字节)</td>
+</tr>
+<tr>
+<td>MCMN</td>
+<td>Metaspace 区初始化 ( 最小 ) 容量 (字节)</td>
+</tr>
+<tr>
+<td>MCMX</td>
+<td>Metaspace 区的最大容量(字节)</td>
+</tr>
+<tr>
+<td>MC</td>
+<td>当前 Metaspace 的容量(字节)</td>
+</tr>
+<tr>
+<td>CCSMN</td>
+<td>最小压缩类空间大小(字节)</td>
+</tr>
+<tr>
+<td>CCMSX</td>
+<td>最大压缩类空间大小(字节)</td>
+</tr>
+<tr>
+<td>CCSC</td>
+<td>当前压缩类空间大小(字节)</td>
+</tr>
+<tr>
+<td>YGC</td>
+<td>从应用程序启动到采样时年轻代中GC(minor GC)次数</td>
+</tr>
+<tr>
+<td>FGC</td>
+<td>从应用程序启动到采样时old代GC(full GC)次数</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>-gcutil：GC相关区域的使用率统计</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S0</td>
+<td>年轻代中第一个survivor（幸存区）已使用的占当前容量百分比</td>
+</tr>
+<tr>
+<td>S1</td>
+<td>年轻代中第二个survivor（幸存区）已使用的占当前容量百分比</td>
+</tr>
+<tr>
+<td>E</td>
+<td>年轻代中Eden（伊甸园）已使用的占当前容量百分比</td>
+</tr>
+<tr>
+<td>O</td>
+<td>old代已使用的占当前容量百分比</td>
+</tr>
+<tr>
+<td>M</td>
+<td>Metaspace代已使用的占当前容量百分比</td>
+</tr>
+<tr>
+<td>CCS</td>
+<td>压缩区已使用的占当前容量百分比</td>
+</tr>
+<tr>
+<td>YGC</td>
+<td>从应用程序启动到采样时年轻代中gc次数</td>
+</tr>
+<tr>
+<td>YGCT</td>
+<td>从应用程序启动到采样时年轻代中gc所用时间(s)</td>
+</tr>
+<tr>
+<td>GCT</td>
+<td>从应用程序启动到采样时gc用的总时间(s)</td>
+</tr>
+<tr>
+<td>FGC</td>
+<td>从应用程序启动到采样时old代(全gc)gc次数</td>
+</tr>
+<tr>
+<td>FGCT</td>
+<td>从应用程序启动到采样时old代(全gc)gc所用时间(s)</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>-gccause：查看上次GC和本次GC（如果正在GC）产生的原因，参数同-gcutil</p>
+</li>
+<li><p>-gcnew：年轻代的统计信息</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S0C</td>
+<td>年轻代中第一个survivor（幸存区）的容量(字节)</td>
+</tr>
+<tr>
+<td>S1C</td>
+<td>年轻代中第二个survivor（幸存区）的容量(字节)</td>
+</tr>
+<tr>
+<td>S0U</td>
+<td>年轻代中第一个survivor（幸存区）目前已使用空间(字节)</td>
+</tr>
+<tr>
+<td>S1U</td>
+<td>年轻代中第二个survivor（幸存区）目前已使用空间(字节)</td>
+</tr>
+<tr>
+<td>TT</td>
+<td>持有次数限制(默认15)</td>
+</tr>
+<tr>
+<td>MTT</td>
+<td>Maximum tenuring threshold，可以通过-XX:MaxTenuringThreshold&#x3D;N设置，默认为15</td>
+</tr>
+<tr>
+<td>DSS</td>
+<td>Desired survivor size，单位为KB，这个值默认为Survivor区的50%</td>
+</tr>
+<tr>
+<td>EC</td>
+<td>年轻代中Eden（伊甸园）的容量(字节)</td>
+</tr>
+<tr>
+<td>EU</td>
+<td>年轻代中Eden（伊甸园）目前已使用空间(字节)</td>
+</tr>
+<tr>
+<td>YGC</td>
+<td>从应用程序启动到采样时年轻代中gc次数</td>
+</tr>
+<tr>
+<td>YGCT</td>
+<td>从应用程序启动到采样时年轻代中gc所用时间(s)</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>-gcoldcapacity：老年代空间大小统计</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>OGCMN</td>
+<td>老年代最小容量</td>
+</tr>
+<tr>
+<td>OGCMX</td>
+<td>老年代最大容量</td>
+</tr>
+<tr>
+<td>OGC</td>
+<td>当前老年代大小</td>
+</tr>
+<tr>
+<td>OC</td>
+<td>老年代大小</td>
+</tr>
+<tr>
+<td>YGC</td>
+<td>年轻代垃圾回收次数</td>
+</tr>
+<tr>
+<td>FGC</td>
+<td>老年代垃圾回收次数</td>
+</tr>
+<tr>
+<td>FGCT</td>
+<td>老年代垃圾回收消耗时间</td>
+</tr>
+<tr>
+<td>GCT</td>
+<td>垃圾回收消耗总时间</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>-gcmetacapacity：meta区大小统计</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MCMN</td>
+<td>最小元数据容量</td>
+</tr>
+<tr>
+<td>MCMX</td>
+<td>最大元数据容量</td>
+</tr>
+<tr>
+<td>MC</td>
+<td>当前元空间大小</td>
+</tr>
+<tr>
+<td>CCSMN</td>
+<td>最小压缩类空间大小</td>
+</tr>
+<tr>
+<td>CCSMX</td>
+<td>最大压缩类空间大小</td>
+</tr>
+<tr>
+<td>CCSC</td>
+<td>当前压缩类空间大小</td>
+</tr>
+<tr>
+<td>YGC</td>
+<td>年轻代垃圾回收次数</td>
+</tr>
+<tr>
+<td>FGC</td>
+<td>老年代垃圾回收次数</td>
+</tr>
+<tr>
+<td>FGCT</td>
+<td>老年代垃圾回收消耗时间</td>
+</tr>
+<tr>
+<td>GCT</td>
+<td>垃圾回收消耗总时间</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>-printcompilation：打印JVM编译统计信息</p>
+</li>
+</ul>
+<h4 id="jmap"><a href="#jmap" class="headerlink" title="jmap"></a>jmap</h4><p><strong>用于查看堆内存的情况，或者将堆内存输出为二进制文本</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">jmap [option] &lt;pid&gt;<br></code></pre></td></tr></table></figure>
+
+<p>options表示命令可选参数：</p>
+<ul>
+<li><p>-heap：打印堆内存配置和使用情况</p>
+</li>
+<li><p>-histo：打印堆内存中的对象大小、数量</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>num</td>
+<td>序号</td>
+</tr>
+<tr>
+<td>instances</td>
+<td>实例个数</td>
+</tr>
+<tr>
+<td>bytes</td>
+<td>字节数</td>
+</tr>
+<tr>
+<td>class_name</td>
+<td>类名</td>
+</tr>
+</tbody></table>
+</li>
+<li><p><code>-dump:format=b,file=[filename].hprof</code> ：dump堆内存到hprof文件</p>
+</li>
+</ul>
+<h4 id="jhat"><a href="#jhat" class="headerlink" title="jhat"></a>jhat</h4><p><strong>用于访问jmap命令生产的dump文件，通过浏览器访问</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">jhat [options] &lt;dump-file&gt;<br></code></pre></td></tr></table></figure>
+
+<p>options表示命令可选参数：</p>
+<ul>
+<li>-port：指定jhat的http服务端口，默认7000</li>
+</ul>
+<h4 id="jstack"><a href="#jstack" class="headerlink" title="jstack"></a>jstack</h4><p><strong>用于查看指定Java进程pid的堆栈信息</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">jstack [options]<br></code></pre></td></tr></table></figure>
+
+<p>options表示命令可选参数：</p>
+<ul>
+<li>-F：强制线程转储。当jstack 没有响应(进程挂起)时使用</li>
+<li>-m：打印Java和底层C&#x2F;C++框架所有栈信息</li>
+<li>-l(小写L)：长列表模式，打印锁的附加信息</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/JDK/" class="category-chain-item">JDK</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/JDK/%E5%B7%A5%E5%85%B7/" class="category-chain-item">工具</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E8%B0%83%E4%BC%98/" class="print-no-link">#调优</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>JDK工具包</div>
+      <div>https://seeyourface.com/2023/09/23/JDK工具使用指南/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yang Lei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年9月23日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/09/22/MySQL%E5%88%86%E9%A1%B5%E6%80%8E%E4%B9%88%E4%BC%98%E5%8C%96%EF%BC%9F/" title="MySQL分页怎么优化？">
+                        <span class="hidden-mobile">MySQL分页怎么优化？</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
