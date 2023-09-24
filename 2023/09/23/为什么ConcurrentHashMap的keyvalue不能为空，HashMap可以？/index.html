@@ -27,7 +27,7 @@
 <meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230923224919178.png">
 <meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230923225542922.png">
 <meta property="article:published_time" content="2023-09-23T14:14:31.000Z">
-<meta property="article:modified_time" content="2023-09-23T14:58:50.715Z">
+<meta property="article:modified_time" content="2023-09-24T04:55:05.167Z">
 <meta property="article:author" content="Yang Lei">
 <meta property="article:tag" content="ConcurrentHashMap">
 <meta property="article:tag" content="HashMap">
@@ -297,8 +297,9 @@
 
 <hr>
 <p>关于<code>ConcurrentHashMap</code> 作者本人 (Doug Lea)对于这个问题做出的回答：</p>
-<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs tex">The main reason that nulls aren&#x27;t allowed in ConcurrentMaps (ConcurrentHashMaps, ConcurrentSkipListMaps) is that ambiguities that may be just barely tolerable in non-concurrent maps can&#x27;t be accommodated. The main one is that if map.get(key) returns null, you can&#x27;t detect whether the key explicitly maps to null vs the key isn&#x27;t mapped. In a non-concurrent map, you can check this via map.contains(key), but in a concurrent one, the map might have changed between calls.<br></code></pre></td></tr></table></figure>
-
+<blockquote>
+<p>The main reason that nulls aren’t allowed in ConcurrentMaps (ConcurrentHashMaps, ConcurrentSkipListMaps) is that ambiguities that may be just barely tolerable in non-concurrent maps can’t be accommodated. The main one is that if map.get(key) returns null, you can’t detect whether the key explicitly maps to null vs the key isn’t mapped. In a non-concurrent map, you can check this via map.contains(key), but in a concurrent one, the map might have changed between calls.</p>
+</blockquote>
 <p>翻译：</p>
 <p>ConcurrentMaps（ConcurrentHashMaps、ConcurrentSkipListMaps）中不允许使用 null 的主要原因是，无法容纳在非并发映射中勉强可以容忍的歧义。主要的一点是，如果map.get(key)返回null，你无法检测该键是否显式映射到null与该键是否未映射。在非并发映射中，您可以通过 map.contains(key) 检查这一点，但在并发映射中，映射可能在<strong>调用之间</strong>发生了变化。</p>
 <h4 id="复合操作"><a href="#复合操作" class="headerlink" title="复合操作"></a>复合操作</h4><p>那么<strong>问题来了</strong>，你有可能会问：八股我都背烂了<code>ConcurrentHashMap</code>不是线程安全的吗，为什么会有其他线程造成影响？</p>
