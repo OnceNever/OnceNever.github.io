@@ -19,7 +19,7 @@
     <meta name="description" content="前情提要我们刷网站的时候，我们经常会遇到需要分页查询的场景。 比如下图谷歌的翻页功能。  我们很容易能联想到可以用MySQL实现。 假设我们的建表SQL是这样的:  建表SQL大家也不用扣细节，只需要知道id是主键，并且在user_name建了个非主键索引就够了，其他都不重要。 为了实现分页。 很容易联想到下面这样的SQL语句。 1select * from page order by id li">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MySQL分页怎么优化？">
-<meta property="og:url" content="https://seeyourface.com/2023/09/22/MySQL%E5%88%86%E9%A1%B5%E6%80%8E%E4%B9%88%E4%BC%98%E5%8C%96%EF%BC%9F/index.html">
+<meta property="og:url" content="https://seeyourface.cn/2023/09/22/MySQL%E5%88%86%E9%A1%B5%E6%80%8E%E4%B9%88%E4%BC%98%E5%8C%96%EF%BC%9F/index.html">
 <meta property="og:site_name" content="Keinmal">
 <meta property="og:description" content="前情提要我们刷网站的时候，我们经常会遇到需要分页查询的场景。 比如下图谷歌的翻页功能。  我们很容易能联想到可以用MySQL实现。 假设我们的建表SQL是这样的:  建表SQL大家也不用扣细节，只需要知道id是主键，并且在user_name建了个非主键索引就够了，其他都不重要。 为了实现分页。 很容易联想到下面这样的SQL语句。 1select * from page order by id li">
 <meta property="og:locale" content="zh_CN">
@@ -84,7 +84,7 @@
   <script id="fluid-configs">
     var Fluid = window.Fluid || {};
     Fluid.ctx = Object.assign({}, Fluid.ctx)
-    var CONFIG = {"hostname":"seeyourface.com","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":100,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+    var CONFIG = {"hostname":"seeyourface.cn","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":100,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
 
     if (CONFIG.web_analytics.follow_dnt) {
       var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
@@ -246,7 +246,7 @@
         
         
         
-          40 分钟
+          24 分钟
         
       </span>
     
@@ -479,7 +479,7 @@
   <div class="license-box my-3">
     <div class="license-title">
       <div>MySQL分页怎么优化？</div>
-      <div>https://seeyourface.com/2023/09/22/MySQL分页怎么优化？/</div>
+      <div>https://seeyourface.cn/2023/09/22/MySQL分页怎么优化？/</div>
     </div>
     <div class="license-meta">
       
