@@ -224,6 +224,78 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
+        <a href="/2023/10/17/MySQL%20JSON%20Data%20Type/" target="_self">
+          MySQL JSON Data Type
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/10/17/MySQL%20JSON%20Data%20Type/" target="_self">
+        <div>
+          序言MySQL 在 5.7.8 版本中首次引入 JSON 数据类型。这使得我们可以更好地处理和操作 JSON 数据，包括存储、查询和索引 JSON 数据。在此之前，要处理 JSON 数据，通常需要将其存储为文本，并使用字符串函数进行操作。程序中我们也无法直接使用从数据库获取的 JSON 数据，需要进一步转化，十分不方便。 JSON 数据类型相对于将 JSON 格式字符串存储在字符串列中具有以下优势
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-10-17 11:11" pubdate>
+              2023-10-17
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/" class="category-chain-item">MySQL</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+            
+              <a href="/tags/MySQL/">#MySQL</a>
+            
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">#数据类型</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
         <a href="/2023/10/13/CompletableFuture-%E4%B8%80%E7%A7%8D%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1%E7%BC%96%E6%8E%92%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" target="_self">
           CompletableFuture-一种异步任务编排解决方案
         </a>
@@ -232,7 +304,7 @@
       
       <a class="index-excerpt index-excerpt__noimg" href="/2023/10/13/CompletableFuture-%E4%B8%80%E7%A7%8D%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1%E7%BC%96%E6%8E%92%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" target="_self">
         <div>
-          前情提要多线程主要是通过提高对 CPU 的利用率从而提升多任务处理的效率，以满足用户的友好体验。 根据 Oracle 官方文档的描述：JAVA 中创建线程的方式有两种：  继承 java.lang.Thread 类。（ Thread 类本质上也是实现了 Runnable 接口） 实现 java.lang.Runnable 接口。  但是，这两种方法都存在一个缺陷——没有返回值，也就是说我们无法得知
+          序言多线程主要是通过提高对 CPU 的利用率从而提升多任务处理的效率，以满足用户的友好体验。 根据 Oracle 官方文档的描述：JAVA 中创建线程的方式有两种：  继承 java.lang.Thread 类。（ Thread 类本质上也是实现了 Runnable 接口） 实现 java.lang.Runnable 接口。  但是，这两种方法都存在一个缺陷——没有返回值，也就是说我们无法得知线程
         </div>
       </a>
 
@@ -846,79 +918,13 @@
     </article>
   </div>
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2023/09/22/MySQL%E5%88%86%E9%A1%B5%E6%80%8E%E4%B9%88%E4%BC%98%E5%8C%96%EF%BC%9F/" target="_self">
-          MySQL分页怎么优化？
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/09/22/MySQL%E5%88%86%E9%A1%B5%E6%80%8E%E4%B9%88%E4%BC%98%E5%8C%96%EF%BC%9F/" target="_self">
-        <div>
-          前情提要我们刷网站的时候，我们经常会遇到需要分页查询的场景。 比如下图谷歌的翻页功能。  我们很容易能联想到可以用MySQL实现。 假设我们的建表SQL是这样的:  建表SQL大家也不用扣细节，只需要知道id是主键，并且在user_name建了个非主键索引就够了，其他都不重要。 为了实现分页。 很容易联想到下面这样的SQL语句。 1select * from page order by id li
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-09-22 22:23" pubdate>
-              2023-09-22
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
-  
-  
-    <span>></span>
-    
-  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/" class="category-chain-item">MySQL</a>
-  
-  
-
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
-            
-              <a href="/tags/%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/">#查询优化</a>
-            
-              <a href="/tags/MySQL/">#MySQL</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
 
 
+  <nav aria-label="navigation">
+    <span class="pagination" id="pagination">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
+    </span>
+  </nav>
 
 
 

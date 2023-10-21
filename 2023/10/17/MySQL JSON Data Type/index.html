@@ -1,0 +1,849 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://blog.seeyourface.cn/blog/pixel.png">
+  <link rel="icon" href="https://blog.seeyourface.cn/blog/pixel.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yang Lei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="序言MySQL 在 5.7.8 版本中首次引入 JSON 数据类型。这使得我们可以更好地处理和操作 JSON 数据，包括存储、查询和索引 JSON 数据。在此之前，要处理 JSON 数据，通常需要将其存储为文本，并使用字符串函数进行操作。程序中我们也无法直接使用从数据库获取的 JSON 数据，需要进一步转化，十分不方便。 JSON 数据类型相对于将 JSON 格式字符串存储在字符串列中具有以下优势">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL JSON Data Type">
+<meta property="og:url" content="https://seeyourface.cn/2023/10/17/MySQL%20JSON%20Data%20Type/index.html">
+<meta property="og:site_name" content="Keinmal">
+<meta property="og:description" content="序言MySQL 在 5.7.8 版本中首次引入 JSON 数据类型。这使得我们可以更好地处理和操作 JSON 数据，包括存储、查询和索引 JSON 数据。在此之前，要处理 JSON 数据，通常需要将其存储为文本，并使用字符串函数进行操作。程序中我们也无法直接使用从数据库获取的 JSON 数据，需要进一步转化，十分不方便。 JSON 数据类型相对于将 JSON 格式字符串存储在字符串列中具有以下优势">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-10-17T03:11:46.000Z">
+<meta property="article:modified_time" content="2023-10-21T05:07:22.114Z">
+<meta property="article:author" content="Yang Lei">
+<meta property="article:tag" content="数据库">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="数据类型">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>MySQL JSON Data Type - Keinmal</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"seeyourface.cn","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":100,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Keinmal</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://blog.seeyourface.cn/blog/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="MySQL JSON Data Type"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-10-17 11:11" pubdate>
+          2023年10月17日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          24k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          119 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">MySQL JSON Data Type</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h3><p><code>MySQL</code> 在 <code>5.7.8</code> 版本中首次引入 <code>JSON</code> 数据类型。这使得我们可以更好地处理和操作 <code>JSON</code> 数据，包括存储、查询和索引 <code>JSON</code> 数据。在此之前，要处理 <code>JSON</code> 数据，通常需要将其存储为文本，并使用字符串函数进行操作。程序中我们也无法直接使用从数据库获取的 <code>JSON</code> 数据，需要进一步转化，十分不方便。</p>
+<p><code>JSON</code> 数据类型相对于将 <code>JSON</code> 格式字符串存储在字符串列中具有以下优势：</p>
+<ul>
+<li>在 <code>JSON</code> 列中存储的 <code>JSON</code> 文档会自动进行验证，<strong>无效的文档会引发错误</strong>。</li>
+<li>经过优化的存储格式。存储在 <code>JSON</code> 列中的 <code>JSON</code> 文档被转换为内部格式，允许快速读取文档元素。当服务器需要读取存储在二进制格式中的 <code>JSON</code> 值时，<strong>无需从文本表示中解析该值</strong>。二进制格式被构造成允许服务器<strong>直接通过键或数组索引查找子对象或嵌套值</strong>，而不需要读取文档中它们之前或之后的所有值。</li>
+</ul>
+<p>随着 <code>MySQL</code> 的版本更新，<code>JSON</code> 数据类型的功能和性能也得到了改进。接下来我们就以 <code>MySQL 8.0.26</code> 版本中 <code>InnoDB</code> 存储引擎为例探讨一下 <code>JSON</code> 格式的数据类型。</p>
+<h3 id="创建JSON值"><a href="#创建JSON值" class="headerlink" title="创建JSON值"></a>创建JSON值</h3><p>在 <code>MySQL</code> 中，<code>JSON</code> 值将被写为字符串。<code>MySQL</code>解析任何在需要 <code>JSON</code> 值的上下文中使用的字符串，如果它不是有效的 <code>JSON</code>，则会产生错误。</p>
+<p>这些上下文包括将值插入具有 <code>JSON</code> 数据类型的列中，并将参数传递给期望 <code>JSON</code> 值的函数（通常在<code>MySQL JSON</code> 函数的文档中显示为 <code>json_doc</code> 或 <code>json_val</code> ），如下例所示：</p>
+<ul>
+<li><p>如果值是有效的 <code>JSON</code> 值，则尝试将值插入 <code>JSON</code> 列会成功，否则，便会失败：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">create</span> <span class="hljs-keyword">table</span> json_test<br>(<br>    id        <span class="hljs-type">int</span> auto_increment comment <span class="hljs-string">&#x27;主键&#x27;</span><br>        <span class="hljs-keyword">primary</span> key,<br>    json_info json <span class="hljs-keyword">null</span> comment <span class="hljs-string">&#x27;json格式信息&#x27;</span><br>);<br><br><span class="hljs-keyword">insert</span> <span class="hljs-keyword">into</span> json_test(json_info) <span class="hljs-keyword">values</span> (<span class="hljs-string">&#x27;&#123;&quot;name&quot;: &quot;小明&quot;, &quot;age&quot;: 18, &quot;sex&quot; : 1&#125;&#x27;</span>);<br><span class="hljs-number">1</span> <span class="hljs-type">row</span> affected <span class="hljs-keyword">in</span> <span class="hljs-number">52</span> ms<br><br><span class="hljs-keyword">insert</span> <span class="hljs-keyword">into</span> json_test(json_info) <span class="hljs-keyword">values</span> (<span class="hljs-string">&#x27;&#123;&quot;name&quot;: &quot;小红&quot;, &quot;age&quot;: 20, &quot;sex&quot;&#125;&#x27;</span>);<br>Data truncation: Invalid JSON text: &quot;Missing a colon after a name of object member.&quot; <span class="hljs-keyword">at</span> position <span class="hljs-number">35</span> <span class="hljs-keyword">in</span> <span class="hljs-keyword">value</span> <span class="hljs-keyword">for</span> <span class="hljs-keyword">column</span> <span class="hljs-string">&#x27;json_test.json_info&#x27;</span>.<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>JSON_TYPE()</code> 函数需要一个 <code>JSON</code> 参数，并尝试将其解析为 <code>JSON</code> 值。如果有效，它会返回值的 <code>JSON</code> 类型，否则会产生错误：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_TYPE(<span class="hljs-string">&#x27;[&quot;吃饭&quot;, false, 20]&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">----------------------------------+</span><br><span class="hljs-operator">|</span> JSON_TYPE(<span class="hljs-string">&#x27;[&quot;吃饭&quot;, false, 20]&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------------------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-keyword">ARRAY</span>                            <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------------------------------+</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_TYPE(<span class="hljs-string">&#x27;&quot;你好&quot;&#x27;</span>);              <br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------+</span><br><span class="hljs-operator">|</span> JSON_TYPE(<span class="hljs-string">&#x27;&quot;你好&quot;&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------+</span><br><span class="hljs-operator">|</span> STRING              <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------+</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_TYPE(<span class="hljs-string">&#x27;你好&#x27;</span>);   <br>ERROR <span class="hljs-number">3141</span> (<span class="hljs-number">22032</span>): Invalid JSON text <span class="hljs-keyword">in</span> argument <span class="hljs-number">1</span> <span class="hljs-keyword">to</span> <span class="hljs-keyword">function</span> json_type: &quot;Invalid value.&quot; <span class="hljs-keyword">at</span> position <span class="hljs-number">0.</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<p>手动输入 <code>JSON</code> 格式字符串非常容易出错，<code>MySQL</code> 为我们提供了一些方法作为代替方案：</p>
+<ul>
+<li><p><code>JSON_ARRAY()</code> 获取一个（可能为空）值列表，并返回一个包含这些值的 <code>JSON</code> 数组：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">JSON_ARRAY</span>(<span class="hljs-string">&#x27;数组&#x27;</span>, <span class="hljs-number">123</span>, NOW()); <br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-built_in">JSON_ARRAY</span>(<span class="hljs-string">&#x27;数组&#x27;</span>, <span class="hljs-number">123</span>, NOW())              <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------+</span><br><span class="hljs-operator">|</span> [&quot;数组&quot;, <span class="hljs-number">123</span>, &quot;2023-10-18 11:30:59.000000&quot;] <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>JSON_OBJECT()</code> 获取键值对的列表（可能为空），并返回包含这些键值对的 <code>JSON</code> 对象：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">JSON_OBJECT</span>(<span class="hljs-string">&#x27;name&#x27;</span>, <span class="hljs-string">&#x27;小红&#x27;</span>, <span class="hljs-string">&#x27;age&#x27;</span>, <span class="hljs-number">20</span>, <span class="hljs-string">&#x27;sex&#x27;</span>, <span class="hljs-number">0</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-built_in">JSON_OBJECT</span>(<span class="hljs-string">&#x27;name&#x27;</span>, <span class="hljs-string">&#x27;小红&#x27;</span>, <span class="hljs-string">&#x27;age&#x27;</span>, <span class="hljs-number">20</span>, <span class="hljs-string">&#x27;sex&#x27;</span>, <span class="hljs-number">0</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------------+</span><br><span class="hljs-operator">|</span> &#123;&quot;age&quot;: <span class="hljs-number">20</span>, &quot;sex&quot;: <span class="hljs-number">0</span>, &quot;name&quot;: &quot;小红&quot;&#125;            <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>JSON_MERGE_PRESERVE()</code> 获取两个或多个 <code>JSON</code> 文档并返回组合结果：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_MERGE_PRESERVE(<span class="hljs-string">&#x27;[&quot;你好&quot;, true]&#x27;</span>, <span class="hljs-string">&#x27;&#123;&quot;name&quot;: &quot;李四&quot;&#125;&#x27;</span>);  <br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_MERGE_PRESERVE(<span class="hljs-string">&#x27;[&quot;你好&quot;, true]&#x27;</span>, <span class="hljs-string">&#x27;&#123;&quot;name&quot;: &quot;李四&quot;&#125;&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------------------------+</span><br><span class="hljs-operator">|</span> [&quot;你好&quot;, <span class="hljs-literal">true</span>, &#123;&quot;name&quot;: &quot;李四&quot;&#125;]                          <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>JSON</code> 值可以分配给用户定义的变量：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SET</span> <span class="hljs-variable">@j</span> <span class="hljs-operator">=</span> <span class="hljs-built_in">JSON_OBJECT</span>(<span class="hljs-string">&#x27;name&#x27;</span>, <span class="hljs-string">&#x27;老李&#x27;</span>); <br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-variable">@j</span>;<br><span class="hljs-operator">+</span><span class="hljs-comment">------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-variable">@j</span>               <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------+</span><br><span class="hljs-operator">|</span> &#123;&quot;name&quot;: &quot;老李&quot;&#125; <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>然而，用户定义的变量不能是 <code>JSON</code> 数据类型，因此尽管前面示例中的 <code>@j</code> 看起来像 <code>JSON</code> 值，并且具有与 <code>JSON</code> 值相同的字符集和排序规则，但它没有 <code>JSON</code> 数据类型。相反，<code>JSON_OBJECT()</code> 的结果在分配给变量时会<strong>转换为字符串</strong>。</p>
+<p>通过转换 <code>JSON</code> 值生成的字符串具有 <code>utf8mb4</code> 字符集和 <code>utf8mb4_bin</code>排序规则；由于 <code>utf8mb4_bin </code>是二进制排序规则，<strong>因此 <code>JSON</code> 值的比较区分大小写</strong>:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> CHARSET(<span class="hljs-variable">@j</span>), <span class="hljs-keyword">COLLATION</span>(<span class="hljs-variable">@j</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">-------------+---------------+</span><br><span class="hljs-operator">|</span> CHARSET(<span class="hljs-variable">@j</span>) <span class="hljs-operator">|</span> <span class="hljs-keyword">COLLATION</span>(<span class="hljs-variable">@j</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------+---------------+</span><br><span class="hljs-operator">|</span> utf8mb4     <span class="hljs-operator">|</span> utf8mb4_bin   <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------+---------------+</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">JSON_ARRAY</span>(<span class="hljs-string">&#x27;x&#x27;</span>) <span class="hljs-operator">=</span> <span class="hljs-built_in">JSON_ARRAY</span>(<span class="hljs-string">&#x27;X&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-built_in">JSON_ARRAY</span>(<span class="hljs-string">&#x27;x&#x27;</span>) <span class="hljs-operator">=</span> <span class="hljs-built_in">JSON_ARRAY</span>(<span class="hljs-string">&#x27;X&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------+</span><br><span class="hljs-operator">|</span>                                 <span class="hljs-number">0</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------+</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<p>有时，我们需要在 <code>JSON</code> 文档中插入引号字符（“ 或 ”）。</p>
+<p>例如，我们希望将这行字符串以 <code>key/value</code> 键值对的方式插入到 <code>JSON</code> 文档中。</p>
+<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs tex">mascot: The MySQL mascot is a dolphin named &quot;Sakila&quot;.<br></code></pre></td></tr></table></figure>
+
+<p>其中一种作为 <code>JSON</code> 对象插入表中的一种方法是使用 <code>MySQL JSON_object()</code> 函数。在这种情况下，必须使用反斜杠对每个引号字符进行转义，如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> json_test(json_info) <span class="hljs-keyword">VALUES</span>(<span class="hljs-built_in">JSON_OBJECT</span>(&quot;mascot&quot;, &quot;Our mascot is a dolphin named \&quot;Sakila\&quot;.&quot;));<br></code></pre></td></tr></table></figure>
+
+<p>如果将值作为 <code>JSON</code> 对象文字插入，则此操作的方式与此不同，在这种情况下，必须使用双反斜杠转义序列，如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> json_test(json_info) <span class="hljs-keyword">VALUES</span>(<span class="hljs-string">&#x27;&#123;&quot;mascot&quot;: &quot;Our mascot is a dolphin named \\&quot;Sakila\\&quot;.&quot;&#125;&#x27;</span>);<br></code></pre></td></tr></table></figure>
+
+<p>使用双反斜杠可以防止 <code>MySQL</code> 执行转义序列处理，而是将字符串文本传递给存储引擎进行处理。以刚才显示的任何一种方式插入 <code>JSON</code> 对象后，通过执行简单的 <code>SELECT</code> 查询，我们可以看到 <code>JSON</code> 列值中存在反斜杠，如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> json_info <span class="hljs-keyword">from</span> json_test;<br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> json_info                                               <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> &#123;&quot;mascot&quot;: &quot;Our mascot is a dolphin named \&quot;Sakila\&quot;.&quot;&#125; <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>我们可以使用列路径操作符 <code>-&gt;</code> 来查找这个使用 <code>mascot</code> 作为关键字的特定句子，如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> json_info<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>&quot;$.mascot&quot; <span class="hljs-keyword">FROM</span> json_test; <br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------+</span><br><span class="hljs-operator">|</span> json_info<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>&quot;$.mascot&quot;                       <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------+</span><br><span class="hljs-operator">|</span> &quot;Our mascot is a dolphin named \&quot;Sakila\&quot;.&quot; <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>这将会保留反斜杠以及周围的引号。要使用吉祥物作为键显示所需的值，但不包括周围的引号或任何转义符，可以使用内联路径运算符 <code>-&gt;&gt;</code>，如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> json_info<span class="hljs-operator">-</span><span class="hljs-operator">&gt;&gt;</span>&quot;$.mascot&quot; <span class="hljs-keyword">FROM</span> json_test; <br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------+</span><br><span class="hljs-operator">|</span> json_info<span class="hljs-operator">-</span><span class="hljs-operator">&gt;&gt;</span>&quot;$.mascot&quot;                  <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------+</span><br><span class="hljs-operator">|</span> Our mascot <span class="hljs-keyword">is</span> a dolphin named &quot;Sakila&quot;. <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>如果启用了 <code>NO_BACKSLASH_ESCAPES</code> 服务器 <code>SQL</code> 模式，则上一个示例将无法正常工作。如果设置了此模式，则可以使用单个反斜杠而不是双反斜杠来插入 <code>JSON</code> 对象文字，并保留反斜杠。如果在执行插入时使用 <code>JSON_OBJECT()</code> 函数，并且设置了此模式，则必须交替使用单引号和双引号，如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> json_test(json_info) <span class="hljs-keyword">VALUES</span> (<span class="hljs-built_in">JSON_OBJECT</span>(<span class="hljs-string">&#x27;mascot&#x27;</span>, <span class="hljs-string">&#x27;Our mascot is a dolphin named &quot;Sakila&quot;.&#x27;</span>));<br></code></pre></td></tr></table></figure>
+</blockquote>
+<h3 id="JSON-值的规范化、合并和自动包装"><a href="#JSON-值的规范化、合并和自动包装" class="headerlink" title="JSON 值的规范化、合并和自动包装"></a>JSON 值的规范化、合并和自动包装</h3><h4 id="规范化"><a href="#规范化" class="headerlink" title="规范化"></a>规范化</h4><p>当一个字符串被解析为一个有效的 <code>JSON</code> 文档时，同时也会被规范化。这意味着，从左到右读取时，与文档后面重复的键会被丢弃。所以下面的 <code>JSON_OBJECT()</code> 调用产生的对象值只包含第二个 <code>key1</code> 元素。</p>
+<blockquote>
+<p>RFC 7159 建议采用这种 “最后一个重复键获胜 “的行为，大多数 JavaScript 解析器都采用了这种行为。</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">JSON_OBJECT</span>(<span class="hljs-string">&#x27;key1&#x27;</span>, <span class="hljs-number">1</span>, <span class="hljs-string">&#x27;key2&#x27;</span>, <span class="hljs-string">&#x27;abc&#x27;</span>, <span class="hljs-string">&#x27;key1&#x27;</span>, <span class="hljs-string">&#x27;def&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-built_in">JSON_OBJECT</span>(<span class="hljs-string">&#x27;key1&#x27;</span>, <span class="hljs-number">1</span>, <span class="hljs-string">&#x27;key2&#x27;</span>, <span class="hljs-string">&#x27;abc&#x27;</span>, <span class="hljs-string">&#x27;key1&#x27;</span>, <span class="hljs-string">&#x27;def&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------------------------+</span><br><span class="hljs-operator">|</span> &#123;&quot;key1&quot;: &quot;def&quot;, &quot;key2&quot;: &quot;abc&quot;&#125;                       <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------------------------+</span><br><br><span class="hljs-comment">-- 这对于在 `JSON` 列中插入值同样有效。</span><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> json_test(json_info) <span class="hljs-keyword">VALUES</span> (<span class="hljs-string">&#x27;&#123;&quot;x&quot;: 17, &quot;x&quot;: &quot;red&quot;&#125;&#x27;</span>), (<span class="hljs-string">&#x27;&#123;&quot;x&quot;: 17, &quot;x&quot;: &quot;red&quot;, &quot;x&quot;: [3, 5, 7]&#125;&#x27;</span>);<br>Query OK, <span class="hljs-number">2</span> <span class="hljs-keyword">rows</span> affected (<span class="hljs-number">0.04</span> sec)<br>Records: <span class="hljs-number">2</span>  Duplicates: <span class="hljs-number">0</span>  Warnings: <span class="hljs-number">0</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">select</span> json_info <span class="hljs-keyword">from</span> json_test;<br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> json_info                                               <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> &#123;&quot;x&quot;: &quot;red&quot;&#125;                                            <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> &#123;&quot;x&quot;: [<span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">7</span>]&#125;                                        <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意</strong>：在 <code>MySQL 8.0.3</code> 之前的版本中，重复键的处理策略与上面恰好相反，也就是执行 <code>first duplicate key wins</code> 的规范化处理。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">JSON_OBJECT</span>(<span class="hljs-string">&#x27;key1&#x27;</span>, <span class="hljs-number">1</span>, <span class="hljs-string">&#x27;key2&#x27;</span>, <span class="hljs-string">&#x27;abc&#x27;</span>, <span class="hljs-string">&#x27;key1&#x27;</span>, <span class="hljs-string">&#x27;def&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-built_in">JSON_OBJECT</span>(<span class="hljs-string">&#x27;key1&#x27;</span>, <span class="hljs-number">1</span>, <span class="hljs-string">&#x27;key2&#x27;</span>, <span class="hljs-string">&#x27;abc&#x27;</span>, <span class="hljs-string">&#x27;key1&#x27;</span>, <span class="hljs-string">&#x27;def&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------------------------+</span><br><span class="hljs-operator">|</span> &#123;&quot;key1&quot;: <span class="hljs-number">1</span>, &quot;key2&quot;: &quot;abc&quot;&#125;                           <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------------------------+</span><br><br><span class="hljs-comment">-- 这对于在 `JSON` 列中插入值同样有效。</span><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> json_test(json_info) <span class="hljs-keyword">VALUES</span> (<span class="hljs-string">&#x27;&#123;&quot;x&quot;: 17, &quot;x&quot;: &quot;red&quot;&#125;&#x27;</span>), (<span class="hljs-string">&#x27;&#123;&quot;x&quot;: 17, &quot;x&quot;: &quot;red&quot;, &quot;x&quot;: [3, 5, 7]&#125;&#x27;</span>);<br>Query OK, <span class="hljs-number">2</span> <span class="hljs-keyword">rows</span> affected (<span class="hljs-number">0.04</span> sec)<br>Records: <span class="hljs-number">2</span>  Duplicates: <span class="hljs-number">0</span>  Warnings: <span class="hljs-number">0</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">select</span> json_info <span class="hljs-keyword">from</span> json_test;<br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> json_info                                               <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> &#123;&quot;x&quot;: <span class="hljs-number">17</span>&#125;                                               <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> &#123;&quot;x&quot;: <span class="hljs-number">17</span>&#125;                                               <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+</blockquote>
+<p><code>MySQL</code> 还会丢弃原始 <code>JSON</code> 文档中键、值或元素之间的多余空白，为了<strong>提高可读性</strong>会在显示时，在每个逗号（,）或冒号（:）后保留（或在必要时插入）一个空格。我们日常开发时在符号和逗号后面保留一个空格也是为了提高可读性。</p>
+<p><strong>对于使用 <code>MySQL</code> 函数生成的 <code>JSON</code> 值总是返回规范化的处理。</strong></p>
+<p>为了提高查找效率，<code>MySQL</code> 还会对 <code>JSON</code> 对象的键进行排序。需要注意的是，这种排序的结果可能会发生变化，而且不能保证在不同版本中保持一致。</p>
+<h4 id="JSON值合并"><a href="#JSON值合并" class="headerlink" title="JSON值合并"></a>JSON值合并</h4><p><code>MySQL 8.0.3</code>（及更高版本）支持两种合并算法，由函数 <code>JSON_MERGE_PRESERVE()</code> 和 <code>JSON_MERGE_PATCH()</code> 实现</p>
+<p>它们在处理重复键的方式上有所不同：</p>
+<ul>
+<li><code>JSON_MERGE_PRESERVE()</code> 会保留重复键的值。</li>
+<li><code>JSON_MERGE_PATCH()</code> 会丢弃除最后一个值以外的所有重复值。</li>
+</ul>
+<blockquote>
+<p><code>JSON_MERGE_PRESERVE()</code> 与 <code>MySQL</code> 以前版本中的 <code>JSON_MERGE()</code> 函数相同（<code>MySQL 8.0.3</code> 中重新命名）。在 <code>MySQL 8.0</code> 中，<code>JSON_MERGE()</code> 作为 <code>JSON_MERGE_PRESERVE()</code> 的别名仍受支持，但已被弃用，并可能在未来的版本中删除。</p>
+</blockquote>
+<h5 id="合并数组"><a href="#合并数组" class="headerlink" title="合并数组"></a>合并数组</h5><p>在由多个数组组合的上下文中，这些数组会合并为一个数组。</p>
+<ul>
+<li><p><code>JSON_MERGE_PRESERVE()</code> 通过将后面命名的数组连接到第一个数组的末尾来实现这一功能。也就是从左往右，将多个数组中的元素首尾相连，最终合并为一个数组。</p>
+</li>
+<li><p><code>JSON_MERGE_PATCH()</code> <strong>将每个数组视为由单个元素组成的数组</strong>（因此每个数组的索引为 0），然后应用 <code>last duplicate key wins</code> 逻辑，只选择最后一个数组。</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> JSON_MERGE_PRESERVE(<span class="hljs-string">&#x27;[1, 2]&#x27;</span>, <span class="hljs-string">&#x27;[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]&#x27;</span>, <span class="hljs-string">&#x27;[true, false]&#x27;</span>) <span class="hljs-keyword">AS</span> Preserve,<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> JSON_MERGE_PATCH(<span class="hljs-string">&#x27;[1, 2]&#x27;</span>, <span class="hljs-string">&#x27;[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]&#x27;</span>, <span class="hljs-string">&#x27;[true, false]&#x27;</span>) <span class="hljs-keyword">AS</span> Patch;<br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------+---------------+</span><br><span class="hljs-operator">|</span> Preserve                           <span class="hljs-operator">|</span> Patch         <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------+---------------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, &quot;a&quot;, &quot;b&quot;, &quot;c&quot;, <span class="hljs-literal">true</span>, <span class="hljs-literal">false</span>] <span class="hljs-operator">|</span> [<span class="hljs-literal">true</span>, <span class="hljs-literal">false</span>] <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------+---------------+</span><br></code></pre></td></tr></table></figure>
+
+
+
+<h5 id="合并对象"><a href="#合并对象" class="headerlink" title="合并对象"></a>合并对象</h5><p>多个对象合并后产生一个对象。</p>
+<ul>
+<li><code>JSON_MERGE_PRESERVE()</code> 在处理具有相同键的多个对象时，会将该键的所有唯一值组合并到一个数组中，被当作结果中该键的值。</li>
+<li><code>JSON_MERGE_PATCH()</code> 会从左到右丢弃键值重复的值，因此结果只包含该键值的最后一个值。</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span><br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> JSON_MERGE_PRESERVE(<span class="hljs-string">&#x27;&#123;&quot;a&quot;: 1, &quot;b&quot;: 2&#125;&#x27;</span>, <span class="hljs-string">&#x27;&#123;&quot;c&quot;: 3, &quot;a&quot;: 4&#125;&#x27;</span>, <span class="hljs-string">&#x27;&#123;&quot;c&quot;: 5, &quot;d&quot;: 3&#125;&#x27;</span>) <span class="hljs-keyword">AS</span> Preserve,<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> JSON_MERGE_PATCH(<span class="hljs-string">&#x27;&#123;&quot;a&quot;: 3, &quot;b&quot;: 2&#125;&#x27;</span>, <span class="hljs-string">&#x27;&#123;&quot;c&quot;: 3, &quot;a&quot;: 4&#125;&#x27;</span>, <span class="hljs-string">&#x27;&#123;&quot;c&quot;: 5, &quot;d&quot;: 3&#125;&#x27;</span>) <span class="hljs-keyword">AS</span> Patch;<br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------+----------------------------------+</span><br><span class="hljs-operator">|</span> Preserve                                   <span class="hljs-operator">|</span> Patch                            <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------+----------------------------------+</span><br><span class="hljs-operator">|</span> &#123;&quot;a&quot;: [<span class="hljs-number">1</span>, <span class="hljs-number">4</span>], &quot;b&quot;: <span class="hljs-number">2</span>, &quot;c&quot;: [<span class="hljs-number">3</span>, <span class="hljs-number">5</span>], &quot;d&quot;: <span class="hljs-number">3</span>&#125; <span class="hljs-operator">|</span> &#123;&quot;a&quot;: <span class="hljs-number">4</span>, &quot;b&quot;: <span class="hljs-number">2</span>, &quot;c&quot;: <span class="hljs-number">5</span>, &quot;d&quot;: <span class="hljs-number">3</span>&#125; <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------+----------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+
+
+<h5 id="合并元素"><a href="#合并元素" class="headerlink" title="合并元素"></a>合并元素</h5><p>在需要数组值的上下文中使用的非数组值将被自动封装，然后将其转化为由 <code>[</code> 和 <code>]</code>字符包围的数组。</p>
+<p>在下面的例子中，每个参数都被自动封装为一个数组（[1], [2]），与前两种情况一样，<code>JSON_MERGE_PRESERVE()</code> 会合并具有相同键值的值，而 <code>JSON_MERGE_PATCH()</code> 则会丢弃除最后一个键值外的所有重复键值。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span><br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> JSON_MERGE_PRESERVE(<span class="hljs-string">&#x27;1&#x27;</span>, <span class="hljs-string">&#x27;2&#x27;</span>) <span class="hljs-keyword">AS</span> Preserve,<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> JSON_MERGE_PATCH(<span class="hljs-string">&#x27;1&#x27;</span>, <span class="hljs-string">&#x27;2&#x27;</span>) <span class="hljs-keyword">AS</span> Patch;<br><span class="hljs-operator">+</span><span class="hljs-comment">----------+-------+</span><br><span class="hljs-operator">|</span> Preserve <span class="hljs-operator">|</span> Patch <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------+-------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>]   <span class="hljs-operator">|</span> <span class="hljs-number">2</span>     <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------+-------+</span><br></code></pre></td></tr></table></figure>
+
+
+
+<h5 id="数组和对象合并"><a href="#数组和对象合并" class="headerlink" title="数组和对象合并"></a>数组和对象合并</h5><p>数组和对象值的合并方式是将对象自动封装为数组，并根据选择的合并函数（<code>JSON_MERGE_PRESERVE()</code> 或  <code>JSON_MERGE_PATCH()</code> ），分别通过合并值或 “最后一个重复键获胜”的方式合并数组，如本示例所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> JSON_MERGE_PRESERVE(<span class="hljs-string">&#x27;[10, 20]&#x27;</span>, <span class="hljs-string">&#x27;&#123;&quot;a&quot;: &quot;x&quot;, &quot;b&quot;: &quot;y&quot;&#125;&#x27;</span>) <span class="hljs-keyword">AS</span> Preserve,<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> JSON_MERGE_PATCH(<span class="hljs-string">&#x27;[10, 20]&#x27;</span>, <span class="hljs-string">&#x27;&#123;&quot;a&quot;: &quot;x&quot;, &quot;b&quot;: &quot;y&quot;&#125;&#x27;</span>) <span class="hljs-keyword">AS</span> Patch; <br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------+----------------------+</span><br><span class="hljs-operator">|</span> Preserve                       <span class="hljs-operator">|</span> Patch                <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------+----------------------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, &#123;&quot;a&quot;: &quot;x&quot;, &quot;b&quot;: &quot;y&quot;&#125;] <span class="hljs-operator">|</span> &#123;&quot;a&quot;: &quot;x&quot;, &quot;b&quot;: &quot;y&quot;&#125; <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------+----------------------+</span><br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="搜索和修改-JSON-值"><a href="#搜索和修改-JSON-值" class="headerlink" title="搜索和修改 JSON 值"></a>搜索和修改 JSON 值</h3><h4 id="路径表达式"><a href="#路径表达式" class="headerlink" title="路径表达式"></a>路径表达式</h4><p><code>JSON</code> 路径表达式对于提取或修改 <code>JSON</code> 文档部分内容的函数非常有用，它可以指定在文档中的哪个位置进行操作。例如，下面的查询从 <code>JSON</code> 文档中提取键为 <code>name</code> 的成员值：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;name&quot;: &quot;小明&quot;, &quot;age&quot; : 18, &quot;sex&quot; : 1&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.name&#x27;</span>); <br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;name&quot;: &quot;小明&quot;, &quot;age&quot; : 18, &quot;sex&quot; : 1&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.name&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> &quot;小明&quot;                                                            <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>路径语法使用前导 <code>$</code> 字符来表示所考虑的 <code>JSON</code> 文档，后面还可选择使用选择器来继续表示文档中更具体的部分：</p>
+<ul>
+<li><p>键名后面的句点表示对象中具有给定键的成员。<strong>如果不带引号的键名在路径表达式中不合法（例如包含空格），则键名必须用双引号指定</strong>。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-comment">-- 键名不合法</span><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;na me&quot;: &quot;小明&quot;, &quot;age&quot; : 18, &quot;sex&quot; : 1&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.na me&#x27;</span>);<br>ERROR <span class="hljs-number">3143</span> (<span class="hljs-number">42000</span>): Invalid JSON path expression. The error <span class="hljs-keyword">is</span> around <span class="hljs-type">character</span> position <span class="hljs-number">5.</span><br><br><span class="hljs-comment">-- 需要使用双引号包裹</span><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;na me&quot;: &quot;小明&quot;, &quot;age&quot; : 18, &quot;sex&quot; : 1&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.&quot;na me&quot;&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;na me&quot;: &quot;小明&quot;, &quot;age&quot; : 18, &quot;sex&quot; : 1&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.&quot;na me&quot;&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> &quot;小明&quot;                                                                <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>将<code>[N]</code> 附加到选择数组的路径上（例如 <code>$</code>）表示指定数组中位置为 <code>N</code> 的值。数组位置是以 0 开头的整数。如果 <code>path</code> 没有选择数组值，则 <code>path</code> 的值与 <code>path[0]</code> 相同：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_SET(<span class="hljs-string">&#x27;&quot;x&quot;&#x27;</span>, <span class="hljs-string">&#x27;$[0]&#x27;</span>, <span class="hljs-string">&#x27;a&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------+</span><br><span class="hljs-operator">|</span> JSON_SET(<span class="hljs-string">&#x27;&quot;x&quot;&#x27;</span>, <span class="hljs-string">&#x27;$[0]&#x27;</span>, <span class="hljs-string">&#x27;a&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------+</span><br><span class="hljs-operator">|</span> &quot;a&quot;                          <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------+</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_SET(<span class="hljs-string">&#x27;&quot;x&quot;&#x27;</span>, <span class="hljs-string">&#x27;$&#x27;</span>, <span class="hljs-string">&#x27;a&#x27;</span>);    <br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------+</span><br><span class="hljs-operator">|</span> JSON_SET(<span class="hljs-string">&#x27;&quot;x&quot;&#x27;</span>, <span class="hljs-string">&#x27;$&#x27;</span>, <span class="hljs-string">&#x27;a&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------+</span><br><span class="hljs-operator">|</span> &quot;a&quot;                       <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------+</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_SET(<span class="hljs-string">&#x27;&quot;x&quot;&#x27;</span>, <span class="hljs-string">&#x27;$[1]&#x27;</span>, <span class="hljs-string">&#x27;a&#x27;</span>);  <br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------+</span><br><span class="hljs-operator">|</span> JSON_SET(<span class="hljs-string">&#x27;&quot;x&quot;&#x27;</span>, <span class="hljs-string">&#x27;$[1]&#x27;</span>, <span class="hljs-string">&#x27;a&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------+</span><br><span class="hljs-operator">|</span> [&quot;x&quot;, &quot;a&quot;]                   <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------+</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>[M to N]</code> 指定数组值的子集或范围，从位置 M 的值开始，到位置 N 的值结束。</p>
+<blockquote>
+<p><code>last</code> 作为最右边数组元素索引同样被支持，</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_SET(<span class="hljs-string">&#x27;&#123;&quot;name&quot;: &quot;John&quot;, &quot;age&quot;: 30, &quot;city&quot;: &quot;New York&quot;&#125;&#x27;</span>, <span class="hljs-string">&#x27;$[last]&#x27;</span>, <span class="hljs-string">&#x27;Los Angeles&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_SET(<span class="hljs-string">&#x27;&#123;&quot;name&quot;: &quot;John&quot;, &quot;age&quot;: 30, &quot;city&quot;: &quot;New York&quot;&#125;&#x27;</span>, <span class="hljs-string">&#x27;$[last]&#x27;</span>, <span class="hljs-string">&#x27;Los Angeles&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> &quot;Los Angeles&quot;                                                                         <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>路径可以包含 <code>*</code> 或 <code>**</code> 通配符：</p>
+<ul>
+<li><code>.[*]</code>表示为 <code>JSON</code> 对象中所有成员的值。</li>
+<li><code>[*]</code> 表示为 <code>JSON</code> 数组中所有元素的值。</li>
+<li><em><code>prefix</code>**<code>suffix </code></em> 会匹配以指定前缀开头、以指定后缀结尾的所有路径。</li>
+</ul>
+</li>
+<li><p>获取文档中不存在的路径（求值为不存在的数据）时会返回 <code>NULL</code>。</p>
+</li>
+</ul>
+<p>举个例子：我们使用 <code>$</code> 来表示下面这个包含三个元素的 <code>JSON</code> 数组：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">[</span><span class="hljs-number">3</span><span class="hljs-punctuation">,</span> <span class="hljs-punctuation">&#123;</span><span class="hljs-attr">&quot;a&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">5</span><span class="hljs-punctuation">,</span> <span class="hljs-number">6</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;b&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span> <span class="hljs-punctuation">[</span><span class="hljs-number">99</span><span class="hljs-punctuation">,</span> <span class="hljs-number">100</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">]</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>$[0]</code> 表示 <code>3</code>.</li>
+<li><code>$[1]</code> 表示  <code>&#123;&quot;a&quot;: [5, 6], &quot;b&quot;: 10&#125;</code>.</li>
+<li><code>$[2]</code> 表示 <code>[99, 100]</code>.</li>
+<li><code>$[3]</code> 返回的结果为 <code>NULL</code> （它指的是第四个数组元素，该元素不存在）。</li>
+</ul>
+<p>由于 <code>$[1]</code> 和 <code>$[2]</code>  表示非标量值，因此它们可以用作选择嵌套值的更具体路径表达式的基础。例子：</p>
+<ul>
+<li><code>$[1].a</code> 表示 <code>[5, 6]</code>.</li>
+<li><code>$[1].b</code> 表示 <code>10</code>.</li>
+<li><code>$[2][0]</code> 表示 <code>99</code>.</li>
+</ul>
+<p>使用通配符的路径计算结果为可以包含多个值的数组：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: [3, 4, 5]&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.*&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: [3, 4, 5]&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.*&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, [<span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]]                                       <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: [3, 4, 5]&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.c[*]&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: [3, 4, 5]&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.c[*]&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]                                                  <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>在以下示例中，路径<code>$**.b</code> 表示为多个路径（<code>$.a.b</code>和 <code>$.c.b</code>）并生成匹配路径值的数组：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;a&quot;: &#123;&quot;b&quot;: 1&#125;, &quot;c&quot;: &#123;&quot;b&quot;: 2&#125;&#125;&#x27;</span>, <span class="hljs-string">&#x27;$**.b&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;&#123;&quot;a&quot;: &#123;&quot;b&quot;: 1&#125;, &quot;c&quot;: &#123;&quot;b&quot;: 2&#125;&#125;&#x27;</span>, <span class="hljs-string">&#x27;$**.b&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>]                                                  <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">---------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p><strong>JSON 数组的范围。</strong> 可以使用带有 <code>to</code> 关键字的范围来指定 <code>JSON</code> 数组的子集。例如，<code>$[1 to 3]</code>包含数组的第二个、第三个和第四个元素，如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[1, 2, 3, 4, 5]&#x27;</span>, <span class="hljs-string">&#x27;$[1 to 3]&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">----------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[1, 2, 3, 4, 5]&#x27;</span>, <span class="hljs-string">&#x27;$[1 to 3]&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------------------------------------------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>]                                    <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>语法 <code>M to N</code>，其中 M 和 N 分别是 <code>JSON</code> 数组元素所取范围的第一个和最后一个索引。数组元素的索引从 0 开始。</p>
+<p>最右边的数组元素： <code>last</code> 关键字是数组中最后一个元素索引的代名词。<code>last - N</code> 形式的表达式可用于相对寻址和范围定义，如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[1, 2, 3, 4, 5]&#x27;</span>, <span class="hljs-string">&#x27;$[last-3 to last-1]&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[1, 2, 3, 4, 5]&#x27;</span>, <span class="hljs-string">&#x27;$[last-3 to last-1]&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------------------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>]                                              <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>如果路径表达式是针对一个非数组的值进行求值，求值结果与该值被包在单元素数组中的结果相同：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_REPLACE(<span class="hljs-string">&#x27;&quot;Sakila&quot;&#x27;</span>, <span class="hljs-string">&#x27;$[last]&#x27;</span>, <span class="hljs-number">10</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_REPLACE(<span class="hljs-string">&#x27;&quot;Sakila&quot;&#x27;</span>, <span class="hljs-string">&#x27;$[last]&#x27;</span>, <span class="hljs-number">10</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-number">10</span>                                      <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+
+
+<h4 id="JSON值搜索"><a href="#JSON值搜索" class="headerlink" title="JSON值搜索"></a>JSON值搜索</h4><p>我们可以使用带有 <code>JSON</code> 列标识符和 <code>JSON</code> 路径表达式的 <code>column-&gt;path</code> 作为 <code>JSON_EXTRACT(column,path)</code> 的同义词。</p>
+<ul>
+<li><p><code>JSON_CONTAINS (target, candidate[, path])</code></p>
+<p>通过返回 1 或 0 表示给定的 <code>candidate</code> 是否包含在目标 <code>JSON</code> 文档中，或者（如果提供了路径参数）候选文档是否在目标文档的特定路径中找到。如果任何参数为 NULL，或者路径参数未指定目标文档的某个部分，则返回 NULL。如果目标或候选对象不是有效的 JSON 文档，或者路径参数不是有效的路径表达式或包含 * 或 ** 通配符，则会发生错误。仅检查路径中是否存在<strong>任何数据</strong>，请改用 <code>JSON_CONTAINS_PATH()</code>。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SET</span> <span class="hljs-variable">@j</span> <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;&#123;&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: &#123;&quot;d&quot;: 4&#125;&#125;&#x27;</span>;<br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SET</span> <span class="hljs-variable">@j2</span> <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;1&#x27;</span>;<br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_CONTAINS(<span class="hljs-variable">@j</span>, <span class="hljs-variable">@j2</span>, <span class="hljs-string">&#x27;$.a&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br><span class="hljs-operator">|</span> JSON_CONTAINS(<span class="hljs-variable">@j</span>, <span class="hljs-variable">@j2</span>, <span class="hljs-string">&#x27;$.a&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br><span class="hljs-operator">|</span>                             <span class="hljs-number">1</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_CONTAINS(<span class="hljs-variable">@j</span>, <span class="hljs-variable">@j2</span>, <span class="hljs-string">&#x27;$.b&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br><span class="hljs-operator">|</span> JSON_CONTAINS(<span class="hljs-variable">@j</span>, <span class="hljs-variable">@j2</span>, <span class="hljs-string">&#x27;$.b&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br><span class="hljs-operator">|</span>                             <span class="hljs-number">0</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SET</span> <span class="hljs-variable">@j2</span> <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;&#123;&quot;d&quot;: 4&#125;&#x27;</span>;<br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_CONTAINS(<span class="hljs-variable">@j</span>, <span class="hljs-variable">@j2</span>, <span class="hljs-string">&#x27;$.a&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br><span class="hljs-operator">|</span> JSON_CONTAINS(<span class="hljs-variable">@j</span>, <span class="hljs-variable">@j2</span>, <span class="hljs-string">&#x27;$.a&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br><span class="hljs-operator">|</span>                             <span class="hljs-number">0</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_CONTAINS(<span class="hljs-variable">@j</span>, <span class="hljs-variable">@j2</span>, <span class="hljs-string">&#x27;$.c&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br><span class="hljs-operator">|</span> JSON_CONTAINS(<span class="hljs-variable">@j</span>, <span class="hljs-variable">@j2</span>, <span class="hljs-string">&#x27;$.c&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br><span class="hljs-operator">|</span>                             <span class="hljs-number">1</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>JSON_EXTRACT(json_doc, path[, path] ...)</code></p>
+<p>从 <code>JSON</code> 文档返回数据，该数据是从与参数 <em><code>path</code></em>  匹配的文档部分中选择的。如果有任何参数 <code>NULL</code>或没有路径在文档中找到值，则返回 <code>NULL</code>。如果参数不是有效的 <code>JSON</code> 文档或任何 <code>path</code> 参数都不是有效的路径表达式， 则会发生错误 。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[10, 20, [30, 40]]&#x27;</span>, <span class="hljs-string">&#x27;$[1]&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[10, 20, [30, 40]]&#x27;</span>, <span class="hljs-string">&#x27;$[1]&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-number">20</span>                                         <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------+</span><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[10, 20, [30, 40]]&#x27;</span>, <span class="hljs-string">&#x27;$[1]&#x27;</span>, <span class="hljs-string">&#x27;$[0]&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">----------------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[10, 20, [30, 40]]&#x27;</span>, <span class="hljs-string">&#x27;$[1]&#x27;</span>, <span class="hljs-string">&#x27;$[0]&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------------------------------------------------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">20</span>, <span class="hljs-number">10</span>]                                           <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------------------------------------------------+</span><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[10, 20, [30, 40]]&#x27;</span>, <span class="hljs-string">&#x27;$[2][*]&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------------+</span><br><span class="hljs-operator">|</span> JSON_EXTRACT(<span class="hljs-string">&#x27;[10, 20, [30, 40]]&#x27;</span>, <span class="hljs-string">&#x27;$[2][*]&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------------+</span><br><span class="hljs-operator">|</span> [<span class="hljs-number">30</span>, <span class="hljs-number">40</span>]                                      <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-----------------------------------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>MySQL 支持 <code>-&gt;</code> 运算符作为此函数的简写形式，它可以与 2 个参数一起使用，其中左侧是 <code>JSON</code> 列标识符（不是表达式），右侧是要在列中匹配的 <code>JSON</code> 路径。</p>
+</li>
+<li><p><code>column</code> <em>-&gt;</em><code>path</code> （此功能不限于 <code>SELECT</code>）</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> c, JSON_EXTRACT(c, &quot;$.id&quot;), g<br>     <span class="hljs-operator">&gt;</span> <span class="hljs-keyword">FROM</span> jemp<br>     <span class="hljs-operator">&gt;</span> <span class="hljs-keyword">WHERE</span> JSON_EXTRACT(c, &quot;$.id&quot;) <span class="hljs-operator">&gt;</span> <span class="hljs-number">1</span><br>     <span class="hljs-operator">&gt;</span> <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> JSON_EXTRACT(c, &quot;$.name&quot;);<br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+-----------+------+</span><br><span class="hljs-operator">|</span> c                             <span class="hljs-operator">|</span> c<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>&quot;$.id&quot; <span class="hljs-operator">|</span> g    <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+-----------+------+</span><br><span class="hljs-operator">|</span> &#123;&quot;id&quot;: &quot;3&quot;, &quot;name&quot;: &quot;Barney&quot;&#125; <span class="hljs-operator">|</span> &quot;3&quot;       <span class="hljs-operator">|</span>    <span class="hljs-number">3</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> &#123;&quot;id&quot;: &quot;4&quot;, &quot;name&quot;: &quot;Betty&quot;&#125;  <span class="hljs-operator">|</span> &quot;4&quot;       <span class="hljs-operator">|</span>    <span class="hljs-number">4</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> &#123;&quot;id&quot;: &quot;2&quot;, &quot;name&quot;: &quot;Wilma&quot;&#125;  <span class="hljs-operator">|</span> &quot;2&quot;       <span class="hljs-operator">|</span>    <span class="hljs-number">2</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+-----------+------+</span><br><span class="hljs-number">3</span> <span class="hljs-keyword">rows</span> <span class="hljs-keyword">in</span> <span class="hljs-keyword">set</span> (<span class="hljs-number">0.00</span> sec)<br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> c, c<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>&quot;$.id&quot;, g<br>     <span class="hljs-operator">&gt;</span> <span class="hljs-keyword">FROM</span> jemp<br>     <span class="hljs-operator">&gt;</span> <span class="hljs-keyword">WHERE</span> c<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>&quot;$.id&quot; <span class="hljs-operator">&gt;</span> <span class="hljs-number">1</span><br>     <span class="hljs-operator">&gt;</span> <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> c<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>&quot;$.name&quot;;<br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+-----------+------+</span><br><span class="hljs-operator">|</span> c                             <span class="hljs-operator">|</span> c<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>&quot;$.id&quot; <span class="hljs-operator">|</span> g    <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+-----------+------+</span><br><span class="hljs-operator">|</span> &#123;&quot;id&quot;: &quot;3&quot;, &quot;name&quot;: &quot;Barney&quot;&#125; <span class="hljs-operator">|</span> &quot;3&quot;       <span class="hljs-operator">|</span>    <span class="hljs-number">3</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> &#123;&quot;id&quot;: &quot;4&quot;, &quot;name&quot;: &quot;Betty&quot;&#125;  <span class="hljs-operator">|</span> &quot;4&quot;       <span class="hljs-operator">|</span>    <span class="hljs-number">4</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> &#123;&quot;id&quot;: &quot;2&quot;, &quot;name&quot;: &quot;Wilma&quot;&#125;  <span class="hljs-operator">|</span> &quot;2&quot;       <span class="hljs-operator">|</span>    <span class="hljs-number">2</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+-----------+------+</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>column -&gt;&gt; path</code></p>
+<p>这是一个改进的、不带引号的提取运算符。虽然该<code>-&gt;</code>运算符只是提取一个值，但该<code>-&gt;&gt;</code>运算符还取消提取引用的结果。该运算符可以在任何允许的<code>-&gt;&gt;</code>地方使用 。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> jemp <span class="hljs-keyword">WHERE</span> g <span class="hljs-operator">&gt;</span> <span class="hljs-number">2</span>;<br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+------+</span><br><span class="hljs-operator">|</span> c                             <span class="hljs-operator">|</span> g    <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+------+</span><br><span class="hljs-operator">|</span> &#123;&quot;id&quot;: &quot;3&quot;, &quot;name&quot;: &quot;Barney&quot;&#125; <span class="hljs-operator">|</span>    <span class="hljs-number">3</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> &#123;&quot;id&quot;: &quot;4&quot;, &quot;name&quot;: &quot;Betty&quot;&#125;  <span class="hljs-operator">|</span>    <span class="hljs-number">4</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------------------------------+------+</span><br><span class="hljs-number">2</span> <span class="hljs-keyword">rows</span> <span class="hljs-keyword">in</span> <span class="hljs-keyword">set</span> (<span class="hljs-number">0.01</span> sec)<br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> c<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span><span class="hljs-string">&#x27;$.name&#x27;</span> <span class="hljs-keyword">AS</span> name<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>     <span class="hljs-keyword">FROM</span> jemp <span class="hljs-keyword">WHERE</span> g <span class="hljs-operator">&gt;</span> <span class="hljs-number">2</span>;<br><span class="hljs-operator">+</span><span class="hljs-comment">----------+</span><br><span class="hljs-operator">|</span> name     <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------+</span><br><span class="hljs-operator">|</span> &quot;Barney&quot; <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> &quot;Betty&quot;  <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----------+</span><br><span class="hljs-number">2</span> <span class="hljs-keyword">rows</span> <span class="hljs-keyword">in</span> <span class="hljs-keyword">set</span> (<span class="hljs-number">0.00</span> sec)<br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> JSON_UNQUOTE(c<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span><span class="hljs-string">&#x27;$.name&#x27;</span>) <span class="hljs-keyword">AS</span> name<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>     <span class="hljs-keyword">FROM</span> jemp <span class="hljs-keyword">WHERE</span> g <span class="hljs-operator">&gt;</span> <span class="hljs-number">2</span>;<br><span class="hljs-operator">+</span><span class="hljs-comment">--------+</span><br><span class="hljs-operator">|</span> name   <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------+</span><br><span class="hljs-operator">|</span> Barney <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> Betty  <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------+</span><br><span class="hljs-number">2</span> <span class="hljs-keyword">rows</span> <span class="hljs-keyword">in</span> <span class="hljs-keyword">set</span> (<span class="hljs-number">0.00</span> sec)<br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> c<span class="hljs-operator">-</span><span class="hljs-operator">&gt;&gt;</span><span class="hljs-string">&#x27;$.name&#x27;</span> <span class="hljs-keyword">AS</span> name<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>     <span class="hljs-keyword">FROM</span> jemp <span class="hljs-keyword">WHERE</span> g <span class="hljs-operator">&gt;</span> <span class="hljs-number">2</span>;<br><span class="hljs-operator">+</span><span class="hljs-comment">--------+</span><br><span class="hljs-operator">|</span> name   <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------+</span><br><span class="hljs-operator">|</span> Barney <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> Betty  <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------+</span><br><span class="hljs-number">2</span> <span class="hljs-keyword">rows</span> <span class="hljs-keyword">in</span> <span class="hljs-keyword">set</span> (<span class="hljs-number">0.00</span> sec)<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>JSON_VALUE(json_doc, path)</code></p>
+<p>从指定文档中给定路径处的 <code>JSON</code> 文档中提取值，并返回提取的值，可以选择将其转换为所需的类型。完整的语法如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-built_in">JSON_VALUE</span>(json_doc, path [RETURNING type] [on_empty] [on_error])<br><br>on_empty:<br>    &#123;<span class="hljs-keyword">NULL</span> <span class="hljs-operator">|</span> ERROR <span class="hljs-operator">|</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-keyword">value</span>&#125; <span class="hljs-keyword">ON</span> <span class="hljs-keyword">EMPTY</span><br><br>on_error:<br>    &#123;<span class="hljs-keyword">NULL</span> <span class="hljs-operator">|</span> ERROR <span class="hljs-operator">|</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-keyword">value</span>&#125; <span class="hljs-keyword">ON</span> ERROR<br></code></pre></td></tr></table></figure>
+
+<p>例子：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">JSON_VALUE</span>(<span class="hljs-string">&#x27;&#123;&quot;fname&quot;: &quot;Joe&quot;, &quot;lname&quot;: &quot;Palmer&quot;&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.fname&#x27;</span>);<br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> <span class="hljs-built_in">JSON_VALUE</span>(<span class="hljs-string">&#x27;&#123;&quot;fname&quot;: &quot;Joe&quot;, &quot;lname&quot;: &quot;Palmer&quot;&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.fname&#x27;</span>) <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------------------------+</span><br><span class="hljs-operator">|</span> Joe                                                          <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">--------------------------------------------------------------+</span><br><br>mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">JSON_VALUE</span>(<span class="hljs-string">&#x27;&#123;&quot;item&quot;: &quot;shoes&quot;, &quot;price&quot;: &quot;49.95&quot;&#125;&#x27;</span>, <span class="hljs-string">&#x27;$.price&#x27;</span><br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> RETURNING <span class="hljs-type">DECIMAL</span>(<span class="hljs-number">4</span>,<span class="hljs-number">2</span>)) <span class="hljs-keyword">AS</span> price;<br><span class="hljs-operator">+</span><span class="hljs-comment">-------+</span><br><span class="hljs-operator">|</span> price <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------+</span><br><span class="hljs-operator">|</span> <span class="hljs-number">49.95</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------+</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><section class="footnotes"><div class="footnote-list"><ol><li><span id="fn:1" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/json.html">https://dev.mysql.com/doc/refman/8.0/en/json.html</a>
+<a href="#fnref:1" rev="footnote" class="footnote-backref"> ↩</a></span></span></li></ol></div></section>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/" class="category-chain-item">MySQL</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="print-no-link">#数据库</a>
+      
+        <a href="/tags/MySQL/" class="print-no-link">#MySQL</a>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="print-no-link">#数据类型</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>MySQL JSON Data Type</div>
+      <div>https://seeyourface.cn/2023/10/17/MySQL JSON Data Type/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yang Lei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年10月17日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/10/13/CompletableFuture-%E4%B8%80%E7%A7%8D%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1%E7%BC%96%E6%8E%92%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" title="CompletableFuture-一种异步任务编排解决方案">
+                        <span class="hidden-mobile">CompletableFuture-一种异步任务编排解决方案</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
