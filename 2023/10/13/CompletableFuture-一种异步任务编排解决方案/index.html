@@ -7,8 +7,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <link rel="apple-touch-icon" sizes="76x76" href="https://blog.seeyourface.cn/blog/pixel.png">
-  <link rel="icon" href="https://blog.seeyourface.cn/blog/pixel.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <link rel="icon" href="https://image.seeyourface.cn/migrate/pixel.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   
@@ -23,16 +23,16 @@
 <meta property="og:site_name" content="Keinmal">
 <meta property="og:description" content="序言多线程主要是通过提高对 CPU 的利用率从而提升多任务处理的效率，以满足用户的友好体验。 根据 Oracle 官方文档的描述：JAVA 中创建线程的方式有两种：  继承 java.lang.Thread 类。（ Thread 类本质上也是实现了 Runnable 接口） 实现 java.lang.Runnable 接口。  但是，这两种方法都存在一个缺陷——没有返回值，也就是说我们无法得知线程">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20231013170446028.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20231013171231135.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/Completable%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1%E7%BB%84%E5%90%88.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20231013170446028.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20231013171231135.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/Completable%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1%E7%BB%84%E5%90%88.png">
 <meta property="article:published_time" content="2023-10-13T07:03:48.000Z">
-<meta property="article:modified_time" content="2023-10-21T03:21:42.638Z">
+<meta property="article:modified_time" content="2023-11-29T14:51:10.228Z">
 <meta property="article:author" content="Yang Lei">
 <meta property="article:tag" content="Thread">
 <meta property="article:tag" content="多线程">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://blog.seeyourface.cn/blog/image-20231013170446028.png">
+<meta name="twitter:image" content="https://image.seeyourface.cn/migrate/image-20231013170446028.png">
   
   
   
@@ -196,7 +196,7 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('https://blog.seeyourface.cn/blog/default.png') no-repeat center center; background-size: cover;">
+     style="background: url('https://image.seeyourface.cn/migrate/default.png') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
@@ -317,11 +317,11 @@
 
 
 
-<p><img src="https://blog.seeyourface.cn/blog/image-20231013170446028.png" srcset="/img/loading.gif" lazyload alt="image-20231013170446028"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20231013170446028.png" srcset="/img/loading.gif" lazyload alt="image-20231013170446028"></p>
 <p><code>CompletableFuture</code> 同时实现了 <code>Future</code> 和 <code>CompletionStage</code> 接口:</p>
 <p><code>CompletionStage</code> 接口描述了一个异步计算的阶段。多个计算可以分成多个阶段或步骤，此时可以通过它将所有步骤组合起来，形成异步计算的流水线。</p>
 <p><code>CompletableFuture</code> 通过继承 <code>CompletionStage</code> 获取其提供的函数式能力。从这个接口的方法参数可以发现其大量使用了 <code>Java8</code> 引入的函数式编程。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20231013171231135.png" srcset="/img/loading.gif" lazyload alt="image-20231013171231135"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20231013171231135.png" srcset="/img/loading.gif" lazyload alt="image-20231013171231135"></p>
 <h3 id="CompletableFuture使用"><a href="#CompletableFuture使用" class="headerlink" title="CompletableFuture使用"></a>CompletableFuture使用</h3><h4 id="实例化"><a href="#实例化" class="headerlink" title="实例化"></a>实例化</h4><p>有两种常见的创建 <code>CompletableFuture</code> 对象的方法：</p>
 <ol>
 <li>通过 <code>new</code> 关键字。</li>
@@ -391,7 +391,7 @@
 
 
 
-<h4 id="异步任务组合"><a href="#异步任务组合" class="headerlink" title="异步任务组合"></a>异步任务组合</h4><h5 id="总览"><a href="#总览" class="headerlink" title="总览"></a>总览</h5><p><img src="https://blog.seeyourface.cn/blog/Completable%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1%E7%BB%84%E5%90%88.png" srcset="/img/loading.gif" lazyload alt="Completable异步任务组合"></p>
+<h4 id="异步任务组合"><a href="#异步任务组合" class="headerlink" title="异步任务组合"></a>异步任务组合</h4><h5 id="总览"><a href="#总览" class="headerlink" title="总览"></a>总览</h5><p><img src="https://image.seeyourface.cn/migrate/Completable%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1%E7%BB%84%E5%90%88.png" srcset="/img/loading.gif" lazyload alt="Completable异步任务组合"></p>
 <h5 id="AND组合关系"><a href="#AND组合关系" class="headerlink" title="AND组合关系"></a>AND组合关系</h5><p><code>thenCombine</code> &#x2F; <code>thenAcceptBoth</code> &#x2F; <code>runAfterBoth</code>都表示：<strong>将两个 <code>CompletableFuture</code> 组合起来，只有这两个都正常执行完了，才会执行某个任务</strong>。</p>
 <p>它们之间的区别在于：</p>
 <ul>

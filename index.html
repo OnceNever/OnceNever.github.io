@@ -7,8 +7,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <link rel="apple-touch-icon" sizes="76x76" href="https://blog.seeyourface.cn/blog/pixel.png">
-  <link rel="icon" href="https://blog.seeyourface.cn/blog/pixel.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <link rel="icon" href="https://image.seeyourface.cn/migrate/pixel.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   
@@ -180,7 +180,7 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('https://blog.seeyourface.cn/blog/default.png') no-repeat center center; background-size: cover;">
+     style="background: url('https://image.seeyourface.cn/migrate/default.png') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
@@ -217,6 +217,281 @@
               <div class="col-12 col-md-10 m-auto">
                 
 
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2023/11/16/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%88%87%E6%8D%A2%E8%81%94%E8%A1%A8%E6%9F%A5%E8%AF%A2%E8%A1%A8%E6%A0%BC%E6%89%80%E4%BD%BF%E7%94%A8%E7%9A%84Schema/" target="_self">
+          如何优雅切换联表查询表格所使用的Schema
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/11/16/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%88%87%E6%8D%A2%E8%81%94%E8%A1%A8%E6%9F%A5%E8%AF%A2%E8%A1%A8%E6%A0%BC%E6%89%80%E4%BD%BF%E7%94%A8%E7%9A%84Schema/" target="_self">
+        <div>
+          序言前面提到过通过动态数据源实现多个数据源之间的连接，本以为能够实现我的多版本知识库切换需求。 但是！如果不出意外肯定就要出意外了！ 项目中存在大量联表查询语句，例如： 1234select *from t1         inner join t2 on t1.template_id = t2.id         inner join t3 on t3.template_id = t2.id
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-11-16 15:21" pubdate>
+              2023-11-16
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" class="category-chain-item">中间件</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90/" class="category-chain-item">动态数据源</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90/">#动态数据源</a>
+            
+              <a href="/tags/Schema/">#Schema</a>
+            
+              <a href="/tags/%E8%81%94%E8%A1%A8%E6%9F%A5%E8%AF%A2%E5%88%87%E6%8D%A2/">#联表查询切换</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2023/11/10/%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%89%88%E6%9C%AC%E5%86%85%E5%AE%B9%E5%BA%93%E5%88%87%E6%8D%A2/" target="_self">
+          动态数据源实现多版本内容库切换
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/11/10/%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%89%88%E6%9C%AC%E5%86%85%E5%AE%B9%E5%BA%93%E5%88%87%E6%8D%A2/" target="_self">
+        <div>
+          序言最近有一个基于C&#x2F;S（客户&#x2F;服务端）结构的多版本内容控制的需求。服务端为所有客户端提供知识库内容支持，客户端可以通过前台页面在线更新服务端的知识库内容，客户端需要使用知识库的内容进行一系列的操作，具体做什么操作不是重点。 现在问题是产品需要支持在旧版本的知识库创建的作业更新后任然使用旧版本知识库内容，而创建新作业时使用更新的知识库内容 经过需求分析之后决定使用动态数据源来处
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-11-10 16:38" pubdate>
+              2023-11-10
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" class="category-chain-item">中间件</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90/" class="category-chain-item">动态数据源</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90/">#动态数据源</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2023/10/27/%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82+%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E4%BB%BB%E5%8A%A1%E5%AE%8C%E6%95%B4%E6%80%A7%E6%A0%A1%E9%AA%8C/" target="_self">
+          简单工厂+责任链模式实现任务完整性校验
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/10/27/%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82+%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E4%BB%BB%E5%8A%A1%E5%AE%8C%E6%95%B4%E6%80%A7%E6%A0%A1%E9%AA%8C/" target="_self">
+        <div>
+          序言现在有这样一个场景： 作业结项时需要对每个 Label 中的数据完整性进行校验。你可以将 Label 理解为不同的标签，每个标签中都需要完成特定的内容，一个作业可以配置多个 Label 。 看到这个需求，我们二话不说，直接在作业结项接口中新增代码，对每个 Label 进行校验操作。 这样有问题吗？当然没问题！（你看着被代码塞满的类心虚的说到） 一顿操作猛如虎，代码 Review 骂成狗 ~ 作
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-10-27 13:59" pubdate>
+              2023-10-27
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" class="category-chain-item">设计模式</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/">#简单工厂模式</a>
+            
+              <a href="/tags/%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F/">#责任链模式</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2023/10/26/MySQL%20Generated%20Columns/" target="_self">
+          MySQL Generated Columns
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/10/26/MySQL%20Generated%20Columns/" target="_self">
+        <div>
+          序言MySQL 5.7 引入了生成列（Generated Columns 还有一种虚拟列的叫法）的支持。生成列中的值由列定义的表达式计算得出。 创建生成列创建生成的列语法定义如下： 1234col_name data_type [GENERATED ALWAYS] AS (expr)  [VIRTUAL | STORED] [NOT NULL | NULL]  [UNIQUE [KEY]] [[P
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-10-26 11:14" pubdate>
+              2023-10-26
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/" class="category-chain-item">MySQL</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+            
+              <a href="/tags/MySQL/">#MySQL</a>
+            
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">#数据类型</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
 
   <div class="row mx-auto index-card">
     
@@ -633,284 +908,6 @@
               <a href="/tags/HTTP/">#HTTP</a>
             
               <a href="/tags/%E7%BC%93%E5%AD%98/">#缓存</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2023/09/24/JDK%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97-LinkedList/" target="_self">
-          JDK源码系列-LinkedList
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/09/24/JDK%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97-LinkedList/" target="_self">
-        <div>
-          LinkedList简介本文内容均以JDK8为例。 LinkedList 是一个基于双向链表实现的集合类，经常被拿来和 ArrayList 做比较。  不过，我们在项目中一般是不会使用到 LinkedList 的，需要用到 LinkedList 的场景几乎都可以使用 ArrayList 来代替，并且，性能通常会更好！就连 LinkedList 的作者约书亚 · 布洛克（Josh Bloch）自己都
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-09-24 17:01" pubdate>
-              2023-09-24
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E6%BA%90%E7%A0%81/" class="category-chain-item">源码</a>
-  
-  
-    <span>></span>
-    
-  <a href="/categories/%E6%BA%90%E7%A0%81/JDK/" class="category-chain-item">JDK</a>
-  
-  
-
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E9%9B%86%E5%90%88/">#集合</a>
-            
-              <a href="/tags/LinkedList/">#LinkedList</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2023/09/24/JDK%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97-ArrayList/" target="_self">
-          JDK源码系列-ArrayList
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/09/24/JDK%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97-ArrayList/" target="_self">
-        <div>
-          ArrayList简介本文内容均以JDK8为例。 ArrayList 继承于 AbstractList ，实现了 List, RandomAccess, Cloneable, java.io.Serializable 这些接口。  List : 表明它是一个列表，支持添加、删除、查找等操作，并且可以通过下标进行访问。 RandomAccess : 这是一个标志接口，表明实现这个接口的 List 集
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-09-24 11:17" pubdate>
-              2023-09-24
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E6%BA%90%E7%A0%81/" class="category-chain-item">源码</a>
-  
-  
-    <span>></span>
-    
-  <a href="/categories/%E6%BA%90%E7%A0%81/JDK/" class="category-chain-item">JDK</a>
-  
-  
-
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E9%9B%86%E5%90%88/">#集合</a>
-            
-              <a href="/tags/ArrayList/">#ArrayList</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2023/09/23/%E4%B8%BA%E4%BB%80%E4%B9%88ConcurrentHashMap%E7%9A%84keyvalue%E4%B8%8D%E8%83%BD%E4%B8%BA%E7%A9%BA%EF%BC%8CHashMap%E5%8F%AF%E4%BB%A5%EF%BC%9F/" target="_self">
-          为什么ConcurrentHashMap的key/value不能为空，HashMap可以？
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/09/23/%E4%B8%BA%E4%BB%80%E4%B9%88ConcurrentHashMap%E7%9A%84keyvalue%E4%B8%8D%E8%83%BD%E4%B8%BA%E7%A9%BA%EF%BC%8CHashMap%E5%8F%AF%E4%BB%A5%EF%BC%9F/" target="_self">
-        <div>
-          为什么ConcurrentHashMap的key&#x2F;value不能为空，HashMap可以？以JDK8为例，在ConcurrentHashMap源码的putVal方法中当传入的参数key或者value为null时，会抛出NullPointerException   ConcurrentHashMap 的 key 和 value 不能为 null 主要是为了避免二义性。 null 是一个特殊
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-09-23 22:14" pubdate>
-              2023-09-23
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/JAVA/" class="category-chain-item">JAVA</a>
-  
-  
-    <span>></span>
-    
-  <a href="/categories/JAVA/%E9%9B%86%E5%90%88/" class="category-chain-item">集合</a>
-  
-  
-
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/ConcurrentHashMap/">#ConcurrentHashMap</a>
-            
-              <a href="/tags/HashMap/">#HashMap</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2023/09/23/JDK%E5%B7%A5%E5%85%B7%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" target="_self">
-          JDK工具使用指南
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/09/23/JDK%E5%B7%A5%E5%85%B7%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" target="_self">
-        <div>
-          JDK工具使用指南jps该命令用于打印当前JVM中运行的Java进程状态信息 1jps [options] [hostid]  options表示命令可选参数：  -q：仅显示pid -m：显示进程pid及main方法参数 -l：打印进程对应JAR文件所在的完整路径名 -v：查看进程pid及JVM参数 -h：打印帮助信息  jinfo用于打印全部参数和系统属性 1jinfo [options] &
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-09-23 14:27" pubdate>
-              2023-09-23
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/JDK/" class="category-chain-item">JDK</a>
-  
-  
-    <span>></span>
-    
-  <a href="/categories/JDK/%E5%B7%A5%E5%85%B7/" class="category-chain-item">工具</a>
-  
-  
-
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E8%B0%83%E4%BC%98/">#调优</a>
             
           </div>
         

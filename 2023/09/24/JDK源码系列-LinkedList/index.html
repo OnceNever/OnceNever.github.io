@@ -7,8 +7,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <link rel="apple-touch-icon" sizes="76x76" href="https://blog.seeyourface.cn/blog/pixel.png">
-  <link rel="icon" href="https://blog.seeyourface.cn/blog/pixel.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <link rel="icon" href="https://image.seeyourface.cn/migrate/pixel.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   
@@ -23,17 +23,17 @@
 <meta property="og:site_name" content="Keinmal">
 <meta property="og:description" content="LinkedList简介本文内容均以JDK8为例。 LinkedList 是一个基于双向链表实现的集合类，经常被拿来和 ArrayList 做比较。  不过，我们在项目中一般是不会使用到 LinkedList 的，需要用到 LinkedList 的场景几乎都可以使用 ArrayList 来代替，并且，性能通常会更好！就连 LinkedList 的作者约书亚 · 布洛克（Josh Bloch）自己都">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/linkedList%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/336a2145-32ef-497e.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230924171241953.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/LinkedList%E5%88%A0%E9%99%A4%E8%8A%82%E7%82%B9%E9%80%BB%E8%BE%91.jpg">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/linkedList%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/336a2145-32ef-497e.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230924171241953.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/LinkedList%E5%88%A0%E9%99%A4%E8%8A%82%E7%82%B9%E9%80%BB%E8%BE%91.jpg">
 <meta property="article:published_time" content="2023-09-24T09:01:33.000Z">
-<meta property="article:modified_time" content="2023-09-24T09:42:00.212Z">
+<meta property="article:modified_time" content="2023-11-29T14:51:00.951Z">
 <meta property="article:author" content="Yang Lei">
 <meta property="article:tag" content="集合">
 <meta property="article:tag" content="LinkedList">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://blog.seeyourface.cn/blog/linkedList%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png">
+<meta name="twitter:image" content="https://image.seeyourface.cn/migrate/linkedList%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png">
   
   
   
@@ -197,7 +197,7 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('https://blog.seeyourface.cn/blog/default.png') no-repeat center center; background-size: cover;">
+     style="background: url('https://image.seeyourface.cn/migrate/default.png') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
@@ -281,9 +281,9 @@
                 
                 <h3 id="LinkedList"><a href="#LinkedList" class="headerlink" title="LinkedList"></a>LinkedList</h3><h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><p>本文内容均以JDK8为例。</p>
 <p><code>LinkedList</code> 是一个基于双向链表实现的集合类，经常被拿来和 <code>ArrayList</code> 做比较。</p>
-<p><img src="https://blog.seeyourface.cn/blog/linkedList%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png" srcset="/img/loading.gif" lazyload alt="linkedList数据结构"></p>
+<p><img src="https://image.seeyourface.cn/migrate/linkedList%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png" srcset="/img/loading.gif" lazyload alt="linkedList数据结构"></p>
 <p>不过，我们在项目中一般是不会使用到 <code>LinkedList</code> 的，需要用到 <code>LinkedList</code> 的场景几乎都可以使用 <code>ArrayList</code> 来代替，并且，性能通常会更好！就连 <code>LinkedList</code> 的作者约书亚 · 布洛克（Josh Bloch）自己都说从来不会使用 <code>LinkedList</code> 。</p>
-<p><img src="https://blog.seeyourface.cn/blog/336a2145-32ef-497e.png" srcset="/img/loading.gif" lazyload alt="336a2145-32ef-497e"></p>
+<p><img src="https://image.seeyourface.cn/migrate/336a2145-32ef-497e.png" srcset="/img/loading.gif" lazyload alt="336a2145-32ef-497e"></p>
 <p>另外，<strong>不要</strong>下意识地认为 <code>LinkedList</code> 作为链表就最适合元素增删的场景。<code>LinkedList</code> 仅仅在头尾插入或者删除元素的时候时间复杂度近似 O(1)，其他情况增删元素的平均时间复杂度都是 O(n) ，因为都需要先遍历到对应节点再进行增删操作。</p>
 <h4 id="LinkedList-插入和删除元素的时间复杂度？"><a href="#LinkedList-插入和删除元素的时间复杂度？" class="headerlink" title="LinkedList 插入和删除元素的时间复杂度？"></a>LinkedList 插入和删除元素的时间复杂度？</h4><ul>
 <li>头部插入&#x2F;删除：只需要修改头结点的指针即可完成插入&#x2F;删除操作，因此时间复杂度为 O(1)。</li>
@@ -300,7 +300,7 @@
 <li><code>Cloneable</code> ：表明它具有拷贝能力，可以进行深拷贝或浅拷贝操作。</li>
 <li><code>Serializable</code> : 表明它可以进行序列化和反序列化操作，也就是即可以将<strong>对象序列化为字节流</strong>进行持久化存储或网络传输，也可以从<strong>字节流反序列化为对象</strong>，非常方便。</li>
 </ul>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230924171241953.png" srcset="/img/loading.gif" lazyload alt="image-20230924171241953"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230924171241953.png" srcset="/img/loading.gif" lazyload alt="image-20230924171241953"></p>
 <p>与ArrayList不同的是，<code>LinkedList</code> 中的元素是通过 <code>Node</code> 定义的：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Node</span>&lt;E&gt; &#123;<br>       <span class="hljs-comment">// 实际存储数据</span><br>       E item;<br>       <span class="hljs-comment">// 后继节点</span><br>       Node&lt;E&gt; next;<br>       <span class="hljs-comment">// 前驱节点</span><br>       Node&lt;E&gt; prev;<br>	<span class="hljs-comment">// 初始化参数顺序分别是：前驱结点、本身节点值、后继节点</span><br>       Node(Node&lt;E&gt; prev, E element, Node&lt;E&gt; next) &#123;<br>           <span class="hljs-built_in">this</span>.item = element;<br>           <span class="hljs-built_in">this</span>.next = next;<br>           <span class="hljs-built_in">this</span>.prev = prev;<br>       &#125;<br>   &#125;<br></code></pre></td></tr></table></figure>
 
@@ -374,7 +374,7 @@
 </li>
 </ol>
 <p>参考下图理解：</p>
-<p><img src="https://blog.seeyourface.cn/blog/LinkedList%E5%88%A0%E9%99%A4%E8%8A%82%E7%82%B9%E9%80%BB%E8%BE%91.jpg" srcset="/img/loading.gif" lazyload alt="LinkedList删除节点逻辑"></p>
+<p><img src="https://image.seeyourface.cn/migrate/LinkedList%E5%88%A0%E9%99%A4%E8%8A%82%E7%82%B9%E9%80%BB%E8%BE%91.jpg" srcset="/img/loading.gif" lazyload alt="LinkedList删除节点逻辑"></p>
 <h4 id="遍历链表"><a href="#遍历链表" class="headerlink" title="遍历链表"></a>遍历链表</h4><p>推荐使用<code>for-each</code> 循环来遍历 <code>LinkedList</code> 中的元素， <code>for-each</code> 循环最终会转换成迭代器形式。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java">LinkedList&lt;String&gt; list = <span class="hljs-keyword">new</span> <span class="hljs-title class_">LinkedList</span>&lt;&gt;();<br>list.add(<span class="hljs-string">&quot;apple&quot;</span>);<br>list.add(<span class="hljs-string">&quot;banana&quot;</span>);<br>list.add(<span class="hljs-string">&quot;pear&quot;</span>);<br><br><span class="hljs-keyword">for</span> (String fruit : list) &#123;<br>    System.out.println(fruit);<br>&#125;<br></code></pre></td></tr></table></figure>
 

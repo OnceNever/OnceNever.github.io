@@ -7,8 +7,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <link rel="apple-touch-icon" sizes="76x76" href="https://blog.seeyourface.cn/blog/pixel.png">
-  <link rel="icon" href="https://blog.seeyourface.cn/blog/pixel.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <link rel="icon" href="https://image.seeyourface.cn/migrate/pixel.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   
@@ -23,26 +23,26 @@
 <meta property="og:site_name" content="Keinmal">
 <meta property="og:description" content="前情提要我们刷网站的时候，我们经常会遇到需要分页查询的场景。 比如下图谷歌的翻页功能。  我们很容易能联想到可以用MySQL实现。 假设我们的建表SQL是这样的:  建表SQL大家也不用扣细节，只需要知道id是主键，并且在user_name建了个非主键索引就够了，其他都不重要。 为了实现分页。 很容易联想到下面这样的SQL语句。 1select * from page order by id li">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922223517480.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922224514427.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922224640869.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922225317030.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922225605773.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922225637429.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922230006225.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922231012627.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922231706442.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922231821926.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922231926176.png">
-<meta property="og:image" content="https://blog.seeyourface.cn/blog/image-20230922232056893.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922223517480.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922224514427.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922224640869.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922225317030.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922225605773.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922225637429.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922230006225.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922231012627.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922231706442.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922231821926.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922231926176.png">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20230922232056893.png">
 <meta property="article:published_time" content="2023-09-22T14:23:30.000Z">
-<meta property="article:modified_time" content="2023-09-26T14:28:49.707Z">
+<meta property="article:modified_time" content="2023-11-29T14:50:58.173Z">
 <meta property="article:author" content="Yang Lei">
 <meta property="article:tag" content="数据库">
 <meta property="article:tag" content="查询优化">
 <meta property="article:tag" content="MySQL">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://blog.seeyourface.cn/blog/image-20230922223517480.png">
+<meta name="twitter:image" content="https://image.seeyourface.cn/migrate/image-20230922223517480.png">
   
   
   
@@ -206,7 +206,7 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('https://blog.seeyourface.cn/blog/default.png') no-repeat center center; background-size: cover;">
+     style="background: url('https://image.seeyourface.cn/migrate/default.png') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
@@ -290,17 +290,17 @@
                 
                 <h3 id="前情提要"><a href="#前情提要" class="headerlink" title="前情提要"></a>前情提要</h3><p>我们刷网站的时候，我们经常会遇到需要分页查询的场景。</p>
 <p>比如下图谷歌的翻页功能。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922223517480.png" srcset="/img/loading.gif" lazyload alt="image-20230922223517480"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922223517480.png" srcset="/img/loading.gif" lazyload alt="image-20230922223517480"></p>
 <p>我们很容易能联想到可以用MySQL实现。</p>
 <p>假设我们的建表SQL是这样的:</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922224514427.png" srcset="/img/loading.gif" lazyload alt="image-20230922224514427"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922224514427.png" srcset="/img/loading.gif" lazyload alt="image-20230922224514427"></p>
 <p>建表SQL大家也不用扣细节，只需要知道<strong>id是主键，并且在user_name建了个非主键索引</strong>就够了，其他都不重要。</p>
 <p>为了实现分页。</p>
 <p>很容易联想到下面这样的SQL语句。</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> page <span class="hljs-keyword">order</span> <span class="hljs-keyword">by</span> id limit <span class="hljs-keyword">offset</span>, size;<br></code></pre></td></tr></table></figure>
 
 <p>打个比方我们一页需要10条数据。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922224640869.png" srcset="/img/loading.gif" lazyload alt="image-20230922224640869"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922224640869.png" srcset="/img/loading.gif" lazyload alt="image-20230922224640869"></p>
 <p>第一页就是下面这样的sql语句。</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> page <span class="hljs-keyword">order</span> <span class="hljs-keyword">by</span> id limit <span class="hljs-number">0</span>, <span class="hljs-number">10</span>;<br></code></pre></td></tr></table></figure>
 
@@ -313,7 +313,7 @@
 <p>而其实 <code>limit size</code> ，相当于 <code>limit 0, size</code>。也就是从0开始取size条数据</p>
 <p>也就是说，两种方式的<strong>区别在于offset是否为0</strong>。</p>
 <p>先来看下<code>limit sql</code>的内部执行逻辑。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922225317030.png" srcset="/img/loading.gif" lazyload alt="image-20230922225317030"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922225317030.png" srcset="/img/loading.gif" lazyload alt="image-20230922225317030"></p>
 <p>mysql内部分为<strong>server层</strong>和<strong>存储引擎层</strong>。一般情况下存储引擎都用innodb。</p>
 <p>server层有很多模块，其中需要关注的是<strong>执行器</strong>是用于跟存储引擎打交道的组件</p>
 <p>执行器可以通过调用存储引擎提供的接口，将一行行数据取出，当这些数据完全符合要求（比如满足其他where条件），则会放到<strong>结果集</strong>中，最后返回给调用mysql的<strong>客户端（go、java写的应用程序）</strong>。</p>
@@ -321,10 +321,10 @@
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql">explain <span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> page <span class="hljs-keyword">order</span> <span class="hljs-keyword">by</span> id limit <span class="hljs-number">0</span>, <span class="hljs-number">10</span>;<br></code></pre></td></tr></table></figure>
 
 <p>可以看到，explain中提示 key 那里，执行的是<strong>PRIMARY</strong>，也就是走的<strong>主键索引</strong>。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922225605773.png" srcset="/img/loading.gif" lazyload alt="image-20230922225605773"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922225605773.png" srcset="/img/loading.gif" lazyload alt="image-20230922225605773"></p>
 <p>主键索引本质是一棵B+树，它是放在innodb中的一个数据结构。</p>
 <p>我们可以回忆下，B+树大概长这样。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922225637429.png" srcset="/img/loading.gif" lazyload alt="image-20230922225637429"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922225637429.png" srcset="/img/loading.gif" lazyload alt="image-20230922225637429"></p>
 <p>在这个树状结构里，我们需要关注的是，最下面一层节点，也就是<strong>叶子结点</strong>。而这个叶子结点里放的信息会根据当前的索引是<strong>主键索引还是非主键索引</strong>有所不同。</p>
 <ul>
 <li>如果是<strong>主键索引</strong>，它的叶子节点会存放完整的行数据信息。</li>
@@ -335,7 +335,7 @@
 
 <p>会通过非主键索引去查询<strong>user_name</strong>为”小白10”的数据，然后在叶子结点里找到**”小白10**”的数据对应的<strong>主键为10</strong>。</p>
 <p>此时回表到<strong>主键索引</strong>中做查询，最后定位到<strong>主键为10的行数据</strong>。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922230006225.png" srcset="/img/loading.gif" lazyload alt="image-20230922230006225"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922230006225.png" srcset="/img/loading.gif" lazyload alt="image-20230922230006225"></p>
 <p>但不管是主键还是非主键索引，他们的叶子结点数据都是<strong>有序的</strong>。比如在主键索引中，这些数据是根据主键id的大小，从小到大，进行排序的。</p>
 <h4 id="基于主键索引的limit执行过程"><a href="#基于主键索引的limit执行过程" class="headerlink" title="基于主键索引的limit执行过程"></a>基于主键索引的limit执行过程</h4><p>回到文章开头的问题里，当我们去掉<code>explain</code>，执行这条sql。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sq">select * from page order by id limit 0, 10;<br></code></pre></td></tr></table></figure>
@@ -370,7 +370,7 @@
 <p>而当offset&gt;0时，且offset的值较小时，逻辑也类似，区别在于，offset&gt;0时会丢弃前面的offset条数据。</p>
 <p>也就是说<strong>非主键索引的limit过程，比主键索引的limit过程，多了个回表的消耗</strong>。</p>
 <p>但当offset变得非常大时，比如600万，此时执行explain。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922231012627.png" srcset="/img/loading.gif" lazyload alt="image-20230922231012627"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922231012627.png" srcset="/img/loading.gif" lazyload alt="image-20230922231012627"></p>
 <p>可以看到type那一栏显示的是<strong>ALL</strong>，也就是<strong>全表扫描</strong>。</p>
 <p>这是因为server层的<strong>优化器</strong>，会在执行器执行sql语句前，判断下哪种执行计划的代价更小。</p>
 <p>很明显，优化器在看到非主键索引的<strong>600w次回表</strong>之后，摇了摇头，我还不如全表一条条记录去判断算了，于是选择了全表扫描。</p>
@@ -396,20 +396,20 @@
 <p>这种场景是最好解决的。</p>
 <p>我们可以将所有的数据<strong>根据id主键进行排序</strong>，然后分批次取，将<strong>当前批次的最大id作为下次筛选的条件</strong>进行查询。</p>
 <p>可以看下伪代码：</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922231706442.png" srcset="/img/loading.gif" lazyload alt="image-20230922231706442"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922231706442.png" srcset="/img/loading.gif" lazyload alt="image-20230922231706442"></p>
 <p>这个操作，可以通过主键索引，每次定位到id在哪，然后往后遍历100个数据，这样不管是多少万的数据，查询性能都很稳定。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922231821926.png" srcset="/img/loading.gif" lazyload alt="image-20230922231821926"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922231821926.png" srcset="/img/loading.gif" lazyload alt="image-20230922231821926"></p>
 <h4 id="如果是给用户做分页展示"><a href="#如果是给用户做分页展示" class="headerlink" title="如果是给用户做分页展示"></a>如果是给用户做分页展示</h4><p>如果深度分页背后的原始需求只是产品经理希望做一个展示页的功能，比如商品展示页，那么我们就应该好好跟产品经理battle一下了。</p>
 <p>什么样的翻页，需要翻到10多万以后，这明显是不合理的需求。</p>
 <p>是不是可以改一下需求，让它更接近用户的使用行为？</p>
 <p>比如，我们在使用谷歌搜索时看到的翻页功能。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922231926176.png" srcset="/img/loading.gif" lazyload alt="image-20230922231926176"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922231926176.png" srcset="/img/loading.gif" lazyload alt="image-20230922231926176"></p>
 <p>一般来说，谷歌搜索基本上都在20页以内，作为一个用户，我就很少会翻到第10页之后。</p>
 <p>如果我们要做搜索或筛选类的页面的话，就别用mysql了，用es，并且也需要控制展示的结果数，比如一万以内，这样不至于让分页过深。</p>
 <p>如果因为各种原因，必须使用mysql。那同样，也需要控制下返回结果数量，比如数量1k以内。</p>
 <p>这样就能勉强支持各种翻页，跳页（比如突然跳到第6页然后再跳到第106页）。</p>
 <p>但如果能从产品的形式上就做成不支持跳页会更好，比如只<strong>支持上一页或下一页</strong>。</p>
-<p><img src="https://blog.seeyourface.cn/blog/image-20230922232056893.png" srcset="/img/loading.gif" lazyload alt="image-20230922232056893"></p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20230922232056893.png" srcset="/img/loading.gif" lazyload alt="image-20230922232056893"></p>
 <p>通过上下页的形式我们就可以使用上面提到的<code>start_id</code>方式，采用分批获取，每批数据以<code>start_id</code>为起始位置。这个解法最大的好处是不管翻到多少页，查询速度永远稳定。</p>
 <p>听起来很挫？</p>
 <p>怎么会呢，把这个功能包装一下。</p>

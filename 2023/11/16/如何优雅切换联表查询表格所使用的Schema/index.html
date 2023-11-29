@@ -1,0 +1,743 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <link rel="icon" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yang Lei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="序言前面提到过通过动态数据源实现多个数据源之间的连接，本以为能够实现我的多版本知识库切换需求。 但是！如果不出意外肯定就要出意外了！ 项目中存在大量联表查询语句，例如： 1234select *from t1         inner join t2 on t1.template_id &#x3D; t2.id         inner join t3 on t3.template_id &#x3D; t2.id">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何优雅切换联表查询表格所使用的Schema">
+<meta property="og:url" content="https://seeyourface.cn/2023/11/16/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%88%87%E6%8D%A2%E8%81%94%E8%A1%A8%E6%9F%A5%E8%AF%A2%E8%A1%A8%E6%A0%BC%E6%89%80%E4%BD%BF%E7%94%A8%E7%9A%84Schema/index.html">
+<meta property="og:site_name" content="Keinmal">
+<meta property="og:description" content="序言前面提到过通过动态数据源实现多个数据源之间的连接，本以为能够实现我的多版本知识库切换需求。 但是！如果不出意外肯定就要出意外了！ 项目中存在大量联表查询语句，例如： 1234select *from t1         inner join t2 on t1.template_id &#x3D; t2.id         inner join t3 on t3.template_id &#x3D; t2.id">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://image.seeyourface.cn/migrate/image-20231116175130355.png">
+<meta property="article:published_time" content="2023-11-16T07:21:30.000Z">
+<meta property="article:modified_time" content="2023-11-29T14:50:36.695Z">
+<meta property="article:author" content="Yang Lei">
+<meta property="article:tag" content="动态数据源">
+<meta property="article:tag" content="Schema">
+<meta property="article:tag" content="联表查询切换">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://image.seeyourface.cn/migrate/image-20231116175130355.png">
+  
+  
+  
+  <title>如何优雅切换联表查询表格所使用的Schema - Keinmal</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"seeyourface.cn","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":100,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Keinmal</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://image.seeyourface.cn/migrate/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="如何优雅切换联表查询表格所使用的Schema"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-11-16 15:21" pubdate>
+          2023年11月16日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          27k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          134 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">如何优雅切换联表查询表格所使用的Schema</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h3><p>前面提到过通过动态数据源实现多个数据源之间的连接，本以为能够实现我的多版本知识库切换需求。</p>
+<p>但是！如果不出意外肯定就要出意外了！</p>
+<p>项目中存在大量联表查询语句，例如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span><br><span class="hljs-keyword">from</span> t1<br>         <span class="hljs-keyword">inner</span> <span class="hljs-keyword">join</span> t2 <span class="hljs-keyword">on</span> t1.template_id <span class="hljs-operator">=</span> t2.id<br>         <span class="hljs-keyword">inner</span> <span class="hljs-keyword">join</span> t3 <span class="hljs-keyword">on</span> t3.template_id <span class="hljs-operator">=</span> t2.id;<br></code></pre></td></tr></table></figure>
+
+<p>对于知识库版本的切换需求，<code>t2</code>、<code>t3</code> 是知识库中的表，它们需要根据知识库的更新而使用不同版本的表，而 <code>t1</code> 则是项目中的主表（可以理解为作业表）。</p>
+<p>如果使用动态数据源的方式来实现这个需求，因为动态数据源切换连接时整个 <code>sql</code> 所处的环境都会被切换，所以就需要将项目中所有这种联表查询给拆出来，容易遗漏不说，还十分麻烦。</p>
+<p>通过多数据源来实现知识版本库的切换行不通，那我们可以尝试通过多 <code>Schema</code> 来实现，因为 <code>SQL</code> 是可以跨 <code>Schema</code> 执行的。</p>
+<p>所以最终的方案主体逻辑为：</p>
+<ul>
+<li>客户端新建作业时绑定知识库版本</li>
+<li>客户端更新知识库时，新建一个 <code>Schema</code> 保存新版本的知识库表</li>
+<li>执行 <code>SQL</code> 时根据作业 <code>id</code> 获取对应知识库版本，将查询表替换为指定 <code>Schema</code> 中的表</li>
+</ul>
+<h3 id="服务端调整"><a href="#服务端调整" class="headerlink" title="服务端调整"></a>服务端调整</h3><p>相较于原来备份时的 <code>TRUNCATE TABLE</code> 命令，调整为服务端给当前知识库版本打标签时，备份出当前知识库表和数据，并添加创建 <code>Schema</code> 命令。</p>
+<h4 id="组装SQL"><a href="#组装SQL" class="headerlink" title="组装SQL"></a>组装SQL</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-variable">@Slf4j</span><br><span class="hljs-variable">@Component</span><br><span class="hljs-variable">@RequiredArgsConstructor</span><br>public class LibraryDumpHandler &#123;<br>    private <span class="hljs-keyword">final</span> Environment environment;<br>    private <span class="hljs-keyword">final</span> DcasProperties properties;<br><br>    <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 核心线程数<br>    private <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Integer</span> CORE_THREADS <span class="hljs-operator">=</span> Runtime.getRuntime().availableProcessors() <span class="hljs-operator">+</span> <span class="hljs-number">1</span>;<br>    private <span class="hljs-keyword">final</span> ReentrantLock mainLock <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> ReentrantLock();<br><br>    public String dump(String version) &#123;<br>        mainLock.lock();<br>        ExecutorService executorService <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> ThreadPoolExecutor(<br>                CORE_THREADS, CORE_THREADS,<br>                <span class="hljs-number">0</span>,<br>                TimeUnit.MILLISECONDS,<br>                <span class="hljs-keyword">new</span> LinkedBlockingQueue<span class="hljs-operator">&lt;&gt;</span>(<span class="hljs-number">100</span>),<br>                <span class="hljs-keyword">new</span> ThreadFactoryBuilder().setNameFormat(&quot;dump-async-name-%d&quot;).setDaemon(<span class="hljs-literal">true</span>).build());<br>        try &#123;<br>            <span class="hljs-keyword">Set</span><span class="hljs-operator">&lt;</span>TableBean<span class="hljs-operator">&gt;</span> tableBeans <span class="hljs-operator">=</span> buildDumpTables();<br>            <span class="hljs-keyword">final</span> DataSource dataSource <span class="hljs-operator">=</span> getDataSource();<br>            Assert.notEmpty(tableBeans);<br>            <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 创建异步任务并使用自定义线程池执行<br>            List<span class="hljs-operator">&lt;</span>CompletableFuture<span class="hljs-operator">&lt;</span>StrBuilder<span class="hljs-operator">&gt;&gt;</span> futureList <span class="hljs-operator">=</span> tableBeans.stream().map(bean <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span><br>                    CompletableFuture.supplyAsync(() <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> tableDump(dataSource, bean, version), executorService)<br>            ).<span class="hljs-keyword">collect</span>(Collectors.toList());<br>            CompletableFuture<span class="hljs-operator">&lt;</span>Void<span class="hljs-operator">&gt;</span> allFutures <span class="hljs-operator">=</span> CompletableFuture.allOf(futureList.toArray(<span class="hljs-keyword">new</span> CompletableFuture[<span class="hljs-number">0</span>]));<br>            <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 等待所有异步任务完成<br>            allFutures.join();<br>            <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 合并所有异步任务结果<br>            CompletableFuture<span class="hljs-operator">&lt;</span>StrBuilder<span class="hljs-operator">&gt;</span> mergedFuture <span class="hljs-operator">=</span> allFutures.thenApply(voidResult <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> &#123;<br>                StrBuilder mergedResult <span class="hljs-operator">=</span> StrBuilder.create();<br>                <span class="hljs-keyword">for</span> (CompletableFuture<span class="hljs-operator">&lt;</span>StrBuilder<span class="hljs-operator">&gt;</span> future : futureList) &#123;<br>                    try &#123;<br>                        mergedResult.append(future.get());<br>                    &#125; catch (InterruptedException <span class="hljs-operator">|</span> ExecutionException e) &#123;<br>                        log.error(e.getMessage());<br>                    &#125;<br>                &#125;<br>                <span class="hljs-keyword">return</span> mergedResult;<br>            &#125;);<br>            StrBuilder tableSqlBuilder <span class="hljs-operator">=</span> mergedFuture.get();<br>            <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 创建schema <span class="hljs-keyword">sql</span><br>            StrBuilder schemaSqlBuilder <span class="hljs-operator">=</span> schemaBuilder(version);<br>            StrBuilder sqlBuilder <span class="hljs-operator">=</span> schemaSqlBuilder.append(StrUtil.LF).append(StrUtil.LF).append(tableSqlBuilder);<br>            <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 导出文件<br>            String path <span class="hljs-operator">=</span> properties.getDumpPath();<br>            FileUtil.mkdir(path);<br>            String fileName <span class="hljs-operator">=</span> String.format(&quot;contentLibrary-%s.sql&quot;, version);<br>            String absolutePath <span class="hljs-operator">=</span> Func.wrapFilePath(path) <span class="hljs-operator">+</span> fileName;<br>            File file <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> File(absolutePath);<br>            FileWriter sqlFile <span class="hljs-operator">=</span> FileWriter.create(file);<br>            sqlFile.write(sqlBuilder.toString());<br><br>            <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 前面的步骤正常执行再打包图片、<span class="hljs-keyword">sql</span>权限查询文件<br>            CompletableFuture.supplyAsync(() <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> zipFolder(properties.getSqlPath(), properties.getDumpPath(),&quot;sql.zip&quot;), executorService);<br>            CompletableFuture.supplyAsync(() <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> zipFolder(properties.getImagePath(), properties.getDumpPath(),&quot;images.zip&quot;), executorService);<br><br>            <span class="hljs-keyword">return</span> absolutePath;<br>        &#125; catch (Exception e) &#123;<br>            throw <span class="hljs-keyword">new</span> RuntimeException(e);<br>        &#125; finally &#123;<br>            executorService.shutdown();<br>            mainLock.unlock();<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 打包文件</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * @param targetPath 需要打包的文件目录</span><br><span class="hljs-comment">     * @param destPath 压缩文件存放路径</span><br><span class="hljs-comment">     * @param zipName 压缩文件名</span><br><span class="hljs-comment">     */</span><br>    private String zipFolder(String targetPath, String destPath, String zipName) &#123;<br>        FileUtil.mkdir(targetPath);<br>        log.info(&quot;[知识库备份] 开始备份文件夹，path:&#123;&#125;&quot;, targetPath);<br>        try (FileOutputStream fos <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> FileOutputStream(destPath <span class="hljs-operator">+</span> StrUtil.SLASH <span class="hljs-operator">+</span> zipName);<br>             ZipOutputStream zos <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> ZipOutputStream(fos)) &#123;<br>            <span class="hljs-operator">/</span><span class="hljs-operator">/</span> addTemplate files <span class="hljs-keyword">to</span> the ZIP file<br>            File directory <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> File(targetPath);<br>            File[] files <span class="hljs-operator">=</span> directory.listFiles();<br>            if (Objects.isNull(files) <span class="hljs-operator">||</span> files.length <span class="hljs-operator">=</span><span class="hljs-operator">=</span> <span class="hljs-number">0</span>) &#123;<br>                log.info(&quot;[知识库备份] 无需备份文件，targetPath:&#123;&#125;&quot;, targetPath);<br>                <span class="hljs-keyword">return</span> zipName;<br>            &#125;<br>            <span class="hljs-keyword">for</span> (File file : files) &#123;<br>                if (<span class="hljs-operator">!</span>file.isDirectory()) &#123;<br>                    ZipEntry zipEntry <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> ZipEntry(file.getName());<br>                    zos.putNextEntry(zipEntry);<br><br>                    FileInputStream fis <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> FileInputStream(file);<br>                    byte[] buffer <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> byte[<span class="hljs-number">4096</span>];<br>                    <span class="hljs-type">int</span> length;<br>                    while ((length <span class="hljs-operator">=</span> fis.read(buffer)) <span class="hljs-operator">&gt;</span> <span class="hljs-number">0</span>) &#123;<br>                        zos.write(buffer, <span class="hljs-number">0</span>, length);<br>                    &#125;<br>                    fis.close();<br>                    zos.closeEntry();<br>                    log.info(&quot;[知识库备份] 文件&#123;&#125;导出成功&quot;, file.getName());<br>                &#125;<br>            &#125;<br>        &#125; catch (IOException ex) &#123;<br>           log.error(&quot;Error creating ZIP file: &#123;&#125;&quot;, ex.getMessage());<br>        &#125;<br>        <span class="hljs-keyword">return</span> zipName;<br>    &#125;<br><br>    <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 创建 Schema<br>    private StrBuilder schemaBuilder(String schema) &#123;<br>        StrBuilder sqlBuilder <span class="hljs-operator">=</span> StrBuilder.create();<br>        sqlBuilder.append(&quot;CREATE SCHEMA IF NOT EXISTS &quot;).append(&quot;\&quot;&quot;).append(schema).append(&quot;\&quot;&quot;).append(CommonConst.SEMICOLON);<br>        <span class="hljs-keyword">return</span> sqlBuilder;<br>    &#125;<br><br>    private StrBuilder tableDump(DataSource ds, TableBean <span class="hljs-keyword">table</span>, String schema) &#123;<br>        Db db <span class="hljs-operator">=</span> DbUtil.use(ds);<br>        StrBuilder sqlBuilder <span class="hljs-operator">=</span> StrBuilder.create();<br>        try &#123;<br>            String tableName <span class="hljs-operator">=</span> table.getTableName();<br>            if (table.isNeedTruncate()) &#123;<br>                sqlBuilder.append(&quot;TRUNCATE &quot;).append(schema).append(StrUtil.DOT).append(tableName);<br>                sqlBuilder.append(CommonConst.SEMICOLON <span class="hljs-operator">+</span> StrUtil.LF);<br>            &#125;<br>            if (table.isNeedCreate()) &#123;<br>                <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 这里注意，由于项目使用的是Pgsql，没有MySQL那种<span class="hljs-keyword">show</span> <span class="hljs-keyword">create</span> <span class="hljs-keyword">table</span>命令，所以自定义了一个命令根据表名获取建表语句<br>                Entity createEntity <span class="hljs-operator">=</span> db.queryOne(&quot;SELECT show_create_table(&#x27;&quot; <span class="hljs-operator">+</span> tableName <span class="hljs-operator">+</span> &quot;&#x27;)&quot;);<br>                String showCreateTable <span class="hljs-operator">=</span> (String) createEntity.get(&quot;show_create_table&quot;);<br>                String oldTable <span class="hljs-operator">=</span> &quot;\&quot;&quot; + tableName + &quot;\&quot;&quot;;<br>                String newTable <span class="hljs-operator">=</span> &quot;\&quot;&quot; + schema + &quot;\&quot;.\&quot;&quot; + tableName + &quot;\&quot;&quot;;<br>                String createTableSql <span class="hljs-operator">=</span> StrUtil.replace(showCreateTable, oldTable, newTable);<br>                sqlBuilder.append(createTableSql);<br>                sqlBuilder.append(StrUtil.LF);<br>            &#125;<br>            if (table.isNeedInsert()) &#123;<br>                List<span class="hljs-operator">&lt;</span>Entity<span class="hljs-operator">&gt;</span> dataEntities <span class="hljs-operator">=</span> db.query(&quot;SELECT * FROM &quot; <span class="hljs-operator">+</span> tableName);<br>                <span class="hljs-keyword">for</span> (Entity dataEntity : dataEntities) &#123;<br>                    StrBuilder field <span class="hljs-operator">=</span> StrBuilder.create();<br>                    StrBuilder data <span class="hljs-operator">=</span> StrBuilder.create();<br>                    dataEntity.forEach((fieldName, fieldValue) <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> &#123;<br>                        String valueStr <span class="hljs-operator">=</span> StrUtil.toStringOrNull(fieldValue);<br>                        field.append(fieldName).append(&quot;, &quot;);<br>                        if (ObjectUtil.isNotNull(valueStr)) &#123;<br>                            <span class="hljs-operator">/</span><span class="hljs-operator">/</span> 值包含 <span class="hljs-string">&#x27; 转义处理</span><br><span class="hljs-string">                            valueStr = StrUtil.replace(valueStr, &quot;&#x27;</span>&quot;, &quot;<span class="hljs-string">&#x27;&#x27;</span>&quot;);<br>                            data.append(&quot;<span class="hljs-string">&#x27;&quot;).append(valueStr).append(&quot;&#x27;</span>&quot;);<br>                        &#125; else &#123;<br>                            data.append(&quot;<span class="hljs-keyword">NULL</span>&quot;);<br>                        &#125;<br>                        data.append(&quot;, &quot;);<br>                    &#125;);<br><br>                    sqlBuilder.append(&quot;<span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> &quot;).append(&quot;\&quot;&quot;).append(schema).append(&quot;\&quot;&quot;).append(StrUtil.DOT).append(tableName).append(&quot;(&quot;);<br>                    // 去掉最后的逗号和空格<br>                    String fieldStr = field.subString(0, field.length() - 2);<br>                    sqlBuilder.append(fieldStr);<br>                    sqlBuilder.append(&quot;) <span class="hljs-keyword">VALUES</span> (&quot;);<br>                    String dataStr = data.subString(0, data.length() - 2);<br>                    sqlBuilder.append(dataStr);<br>                    sqlBuilder.append(&quot;);&quot;);<br>                    sqlBuilder.append(StrUtil.LF);<br>                &#125;<br>            &#125;<br>            sqlBuilder.append(StrUtil.LF);<br>            sqlBuilder.append(StrUtil.LF);<br>            sqlBuilder.append(StrUtil.LF);<br>        &#125; catch (SQLException e) &#123;<br>            log.error(&quot;数据表&#123;&#125;导出失败，msg:&#123;&#125;&quot;, table.getTableName(), e.getMessage());<br>            throw new RuntimeException(e);<br>        &#125;<br>        log.debug(&quot;数据表&#123;&#125;导出成功&quot;, table.getTableName());<br>        return sqlBuilder;<br>    &#125;<br><br>    // 获取系统数据源<br>    private DataSource getDataSource() &#123;<br>        DataSource ds;<br>        Assert.notNull(properties);<br>        try &#123;<br>            // 优先使用db.setting配置<br>            ds = DSFactory.get();<br>        &#125; catch (Exception e) &#123;<br>            // 通过自己的配置创建数据源连接池<br>            Setting setting = new Setting();<br>            setting.put(&quot;url&quot;, environment.getProperty(&quot;spring.datasource.url&quot;));<br>            setting.put(&quot;username&quot;, environment.getProperty(&quot;spring.datasource.username&quot;));<br>            setting.put(&quot;password&quot;, environment.getProperty(&quot;spring.datasource.password&quot;));<br>            try &#123;<br>                DSFactory dsFactory = DSFactory.create(setting);<br>                // 设置全局数据源工厂，下次获取无需重新创建<br>                DSFactory.setCurrentDSFactory(dsFactory);<br>                return DSFactory.get();<br>            &#125; catch (Exception ex) &#123;<br>                log.error(&quot;通过配置创建数据源失败&quot;);<br>                throw new RuntimeException(ex);<br>            &#125;<br>        &#125;<br>        return ds;<br>    &#125;<br><br>    // 从项目配置文件中获取需要备份的表封装成Bean<br>    private Set&lt;TableBean&gt; buildDumpTables() &#123;<br>        SqlDumpProperties sqlDumpProperties = properties.getSqlDump();<br>        Assert.notNull(sqlDumpProperties);<br>        return Arrays.stream(sqlDumpProperties.getTables().split(StrUtil.COMMA)).map(table -&gt;<br>            TableBean.builder()<br>                    .tableName(table.trim())<br>                    .needCreate(sqlDumpProperties.isCreate())<br>                    .needInsert(sqlDumpProperties.isInsert())<br>                    .needTruncate(sqlDumpProperties.isTruncate())<br>                    .build()<br>        ).collect(Collectors.toSet());<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h4 id="自定义查询PGSQL建表方法"><a href="#自定义查询PGSQL建表方法" class="headerlink" title="自定义查询PGSQL建表方法"></a>自定义查询PGSQL建表方法</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">create</span> <span class="hljs-keyword">function</span> show_create_table(in_table_name <span class="hljs-type">character</span> <span class="hljs-type">varying</span>) <span class="hljs-keyword">returns</span> text<br>    <span class="hljs-keyword">language</span> plpgsql<br><span class="hljs-keyword">as</span><br>$$<br><span class="hljs-keyword">DECLARE</span><br>    <span class="hljs-comment">-- the ddl we&#x27;re building</span><br>    v_table_ddl text;<br><br>    <span class="hljs-comment">-- data about the target table</span><br>    v_table_oid <span class="hljs-type">int</span>;<br><br>    v_table_type <span class="hljs-type">char</span>;<br>    v_partition_key <span class="hljs-type">varchar</span>;<br>    v_namespace <span class="hljs-type">varchar</span>;<br>    v_table_comment <span class="hljs-type">varchar</span>;<br><br>    <span class="hljs-comment">-- records for looping</span><br>    v_column_record record;<br>    v_constraint_record record;<br>    v_index_record record;<br>    v_column_comment_record record;<br>    v_index_comment_record record;<br>    v_constraint_comment_record record;<br><span class="hljs-keyword">BEGIN</span><br>    <span class="hljs-comment">-- grab the oid of the table;</span><br><span class="hljs-keyword">SELECT</span> c.oid, c.relkind, n.nspname <span class="hljs-keyword">INTO</span> v_table_oid, v_table_type, v_namespace<br><span class="hljs-keyword">FROM</span> pg_catalog.pg_class c<br>         <span class="hljs-keyword">LEFT</span> <span class="hljs-keyword">JOIN</span> pg_catalog.pg_namespace n <span class="hljs-keyword">ON</span> n.oid <span class="hljs-operator">=</span> c.relnamespace<br><span class="hljs-keyword">WHERE</span> c.relkind <span class="hljs-keyword">in</span> (<span class="hljs-string">&#x27;r&#x27;</span>, <span class="hljs-string">&#x27;p&#x27;</span>)<br>  <span class="hljs-keyword">AND</span> c.relname <span class="hljs-operator">=</span> in_table_name <span class="hljs-comment">-- the table name</span><br>  <span class="hljs-keyword">AND</span> pg_catalog.pg_table_is_visible(c.oid); <span class="hljs-comment">-- the schema</span><br><br><span class="hljs-comment">-- throw an error if table was not found</span><br>IF (v_table_oid <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NULL</span>) <span class="hljs-keyword">THEN</span><br>        RAISE EXCEPTION <span class="hljs-string">&#x27;table does not exist&#x27;</span>;<br><span class="hljs-keyword">END</span> IF;<br><br>    <span class="hljs-comment">-- start the create definition</span><br>    v_table_ddl :<span class="hljs-operator">=</span> <span class="hljs-string">&#x27;CREATE TABLE &quot;&#x27;</span> <span class="hljs-operator">||</span> in_table_name <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot; (&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><br>    <span class="hljs-comment">-- define all of the columns in the table;</span><br><span class="hljs-keyword">FOR</span> v_column_record <span class="hljs-keyword">IN</span><br><span class="hljs-keyword">SELECT</span><br>    c.column_name,<br>    c.data_type,<br>    c.character_maximum_length,<br>    c.is_nullable,<br>    c.column_default<br><span class="hljs-keyword">FROM</span> information_schema.columns c<br><span class="hljs-keyword">WHERE</span> table_name <span class="hljs-operator">=</span> in_table_name <span class="hljs-keyword">and</span> table_schema <span class="hljs-operator">=</span> v_namespace<br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> ordinal_position<br>    LOOP<br>            v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;  &#x27;</span> <span class="hljs-comment">-- <span class="hljs-doctag">note:</span> two char spacer to start, to indent the column</span><br>                               <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot;&#x27;</span> <span class="hljs-operator">||</span> v_column_record.column_name <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot; &#x27;</span><br>                               <span class="hljs-operator">||</span> v_column_record.data_type <span class="hljs-operator">||</span> <span class="hljs-keyword">CASE</span> <span class="hljs-keyword">WHEN</span> v_column_record.character_maximum_length <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">THEN</span> (<span class="hljs-string">&#x27;(&#x27;</span> <span class="hljs-operator">||</span> v_column_record.character_maximum_length <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;)&#x27;</span>) <span class="hljs-keyword">ELSE</span> <span class="hljs-string">&#x27;&#x27;</span> <span class="hljs-keyword">END</span> <span class="hljs-operator">||</span> <span class="hljs-string">&#x27; &#x27;</span><br>                               <span class="hljs-operator">||</span> <span class="hljs-keyword">CASE</span> <span class="hljs-keyword">WHEN</span> v_column_record.is_nullable <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;NO&#x27;</span> <span class="hljs-keyword">THEN</span> <span class="hljs-string">&#x27;NOT NULL&#x27;</span> <span class="hljs-keyword">ELSE</span> <span class="hljs-string">&#x27;NULL&#x27;</span> <span class="hljs-keyword">END</span><br>                               <span class="hljs-operator">||</span> <span class="hljs-keyword">CASE</span> <span class="hljs-keyword">WHEN</span> v_column_record.column_default <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">null</span> <span class="hljs-keyword">THEN</span> (<span class="hljs-string">&#x27; DEFAULT &#x27;</span> <span class="hljs-operator">||</span> v_column_record.column_default) <span class="hljs-keyword">ELSE</span> <span class="hljs-string">&#x27;&#x27;</span> <span class="hljs-keyword">END</span><br>                               <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;,&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><span class="hljs-keyword">END</span> LOOP;<br><br>    <span class="hljs-comment">-- define all the constraints in the;</span><br><span class="hljs-keyword">FOR</span> v_constraint_record <span class="hljs-keyword">IN</span><br><span class="hljs-keyword">SELECT</span><br>    con.conname <span class="hljs-keyword">as</span> constraint_name,<br>    con.contype <span class="hljs-keyword">as</span> constraint_type,<br>    <span class="hljs-keyword">CASE</span><br>        <span class="hljs-keyword">WHEN</span> con.contype <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;p&#x27;</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">1</span> <span class="hljs-comment">-- primary key constraint</span><br>        <span class="hljs-keyword">WHEN</span> con.contype <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;u&#x27;</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">2</span> <span class="hljs-comment">-- unique constraint</span><br>        <span class="hljs-keyword">WHEN</span> con.contype <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;f&#x27;</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">3</span> <span class="hljs-comment">-- foreign key constraint</span><br>        <span class="hljs-keyword">WHEN</span> con.contype <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;c&#x27;</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">4</span><br>        <span class="hljs-keyword">ELSE</span> <span class="hljs-number">5</span><br>        <span class="hljs-keyword">END</span> <span class="hljs-keyword">as</span> type_rank,<br>    pg_get_constraintdef(con.oid) <span class="hljs-keyword">as</span> constraint_definition<br><span class="hljs-keyword">FROM</span> pg_catalog.pg_constraint con<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_class rel <span class="hljs-keyword">ON</span> rel.oid <span class="hljs-operator">=</span> con.conrelid<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_namespace nsp <span class="hljs-keyword">ON</span> nsp.oid <span class="hljs-operator">=</span> connamespace<br><span class="hljs-keyword">WHERE</span> rel.relname <span class="hljs-operator">=</span> in_table_name<br>  <span class="hljs-keyword">AND</span> pg_catalog.pg_table_is_visible(rel.oid)<br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> type_rank<br>    LOOP<br>            IF v_constraint_record.constraint_type <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;p&#x27;</span> <span class="hljs-keyword">THEN</span><br>                v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;  &#x27;</span><br>                                   <span class="hljs-operator">||</span> v_constraint_record.constraint_definition<br>                                   <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;,&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><span class="hljs-keyword">ELSE</span><br>                v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;  &#x27;</span> <span class="hljs-comment">-- <span class="hljs-doctag">note:</span> two char spacer to start, to indent the column</span><br>                                   <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;CONSTRAINT&#x27;</span> <span class="hljs-operator">||</span> <span class="hljs-string">&#x27; &#x27;</span><br>                                   <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot;&#x27;</span> <span class="hljs-operator">||</span> v_constraint_record.constraint_name <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot; &#x27;</span><br>                                   <span class="hljs-operator">||</span> v_constraint_record.constraint_definition<br>                                   <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;,&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><span class="hljs-keyword">END</span> IF;<br><span class="hljs-keyword">END</span> LOOP;<br><br>    <span class="hljs-comment">-- drop the last comma before ending the create statement</span><br>    v_table_ddl <span class="hljs-operator">=</span> substr(v_table_ddl, <span class="hljs-number">0</span>, length(v_table_ddl) <span class="hljs-operator">-</span> <span class="hljs-number">1</span>) <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><br>    <span class="hljs-comment">-- end the create definition</span><br>    v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;)&#x27;</span>;<br><br>    IF v_table_type <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;p&#x27;</span> <span class="hljs-keyword">THEN</span><br><span class="hljs-keyword">SELECT</span> pg_get_partkeydef(v_table_oid) <span class="hljs-keyword">INTO</span> v_partition_key;<br>IF v_partition_key <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">THEN</span><br>            v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27; PARTITION BY &#x27;</span> <span class="hljs-operator">||</span> v_partition_key;<br><span class="hljs-keyword">END</span> IF;<br><span class="hljs-keyword">END</span> IF;<br><br>    v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;;&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><br>    <span class="hljs-comment">-- suffix create statement with all of the indexes on the table</span><br><span class="hljs-keyword">FOR</span> v_index_record <span class="hljs-keyword">IN</span><br><span class="hljs-keyword">SELECT</span> regexp_replace(idx.indexdef, <span class="hljs-string">&#x27; &quot;?&#x27;</span> <span class="hljs-operator">||</span> idx.schemaname <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot;?\.&#x27;</span> <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot;?&#x27;</span> <span class="hljs-operator">||</span> idx.tablename <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot;?&#x27;</span>, <span class="hljs-string">&#x27; &quot;&#x27;</span> <span class="hljs-operator">||</span> idx.tablename <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot; &#x27;</span>) <span class="hljs-keyword">AS</span> indexdef<br><span class="hljs-keyword">FROM</span> pg_indexes idx<br>         <span class="hljs-keyword">JOIN</span> (<br>    <span class="hljs-keyword">SELECT</span> ns.nspname, cls.relname<br>    <span class="hljs-keyword">FROM</span> pg_catalog.pg_class cls<br>             <span class="hljs-keyword">LEFT</span> <span class="hljs-keyword">JOIN</span> pg_catalog.pg_namespace ns <span class="hljs-keyword">ON</span> ns.oid <span class="hljs-operator">=</span> cls.relnamespace<br>    <span class="hljs-keyword">WHERE</span> pg_catalog.pg_table_is_visible(cls.oid)<br>) t <span class="hljs-keyword">ON</span> idx.schemaname <span class="hljs-operator">=</span> t.nspname <span class="hljs-keyword">AND</span> idx.tablename <span class="hljs-operator">=</span> t.relname<br><span class="hljs-keyword">WHERE</span> idx.tablename <span class="hljs-operator">=</span> in_table_name<br>  <span class="hljs-keyword">AND</span> idx.indexname <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">IN</span> (<br>    <span class="hljs-keyword">select</span> con.conname<br>    <span class="hljs-keyword">FROM</span> pg_catalog.pg_constraint con<br>             <span class="hljs-keyword">JOIN</span> pg_catalog.pg_class rel <span class="hljs-keyword">ON</span> rel.oid <span class="hljs-operator">=</span> con.conrelid<br>             <span class="hljs-keyword">JOIN</span> pg_catalog.pg_namespace nsp <span class="hljs-keyword">ON</span> nsp.oid <span class="hljs-operator">=</span> connamespace<br>    <span class="hljs-keyword">WHERE</span> rel.relname <span class="hljs-operator">=</span> in_table_name<br>      <span class="hljs-keyword">AND</span> pg_catalog.pg_table_is_visible(rel.oid)<br>)<br>    LOOP<br>            v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl<br>                               <span class="hljs-operator">||</span> v_index_record.indexdef<br>                               <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;;&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><span class="hljs-keyword">END</span> LOOP;<br><br>    <span class="hljs-comment">-- comment on table</span><br><span class="hljs-keyword">SELECT</span> description <span class="hljs-keyword">INTO</span> v_table_comment<br><span class="hljs-keyword">FROM</span> pg_catalog.pg_description<br><span class="hljs-keyword">WHERE</span> objoid <span class="hljs-operator">=</span> v_table_oid <span class="hljs-keyword">AND</span> objsubid <span class="hljs-operator">=</span> <span class="hljs-number">0</span>;<br><br>IF v_table_comment <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">THEN</span><br>        v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;COMMENT ON TABLE &quot;&#x27;</span> <span class="hljs-operator">||</span> in_table_name <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot; IS &#x27;&#x27;&#x27;</span> <span class="hljs-operator">||</span> replace(v_table_comment, <span class="hljs-string">&#x27;&#x27;&#x27;&#x27;</span>, <span class="hljs-string">&#x27;&#x27;&#x27;&#x27;&#x27;&#x27;</span>) <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&#x27;&#x27;;&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><span class="hljs-keyword">END</span> IF;<br><br>    <span class="hljs-comment">-- comment on column</span><br><span class="hljs-keyword">FOR</span> v_column_comment_record <span class="hljs-keyword">IN</span><br><span class="hljs-keyword">SELECT</span> col.column_name, d.description<br><span class="hljs-keyword">FROM</span> information_schema.columns col<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_class c <span class="hljs-keyword">ON</span> c.relname <span class="hljs-operator">=</span> col.table_name<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_namespace nsp <span class="hljs-keyword">ON</span> nsp.oid <span class="hljs-operator">=</span> c.relnamespace <span class="hljs-keyword">AND</span> col.table_schema <span class="hljs-operator">=</span> nsp.nspname<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_description d <span class="hljs-keyword">ON</span> d.objoid <span class="hljs-operator">=</span> c.oid <span class="hljs-keyword">AND</span> d.objsubid <span class="hljs-operator">=</span> col.ordinal_position<br><span class="hljs-keyword">WHERE</span> c.oid <span class="hljs-operator">=</span> v_table_oid<br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> col.ordinal_position<br>    LOOP<br>            v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;COMMENT ON COLUMN &quot;&#x27;</span> <span class="hljs-operator">||</span> in_table_name <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot;.&quot;&#x27;</span><br>                               <span class="hljs-operator">||</span> v_column_comment_record.column_name <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot; IS &#x27;&#x27;&#x27;</span><br>                               <span class="hljs-operator">||</span> replace(v_column_comment_record.description, <span class="hljs-string">&#x27;&#x27;&#x27;&#x27;</span>, <span class="hljs-string">&#x27;&#x27;&#x27;&#x27;&#x27;&#x27;</span>) <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&#x27;&#x27;;&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><span class="hljs-keyword">END</span> LOOP;<br><br>    <span class="hljs-comment">-- comment on index</span><br><span class="hljs-keyword">FOR</span> v_index_comment_record <span class="hljs-keyword">IN</span><br><span class="hljs-keyword">SELECT</span> c.relname, d.description<br><span class="hljs-keyword">FROM</span> pg_catalog.pg_index idx<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_class c <span class="hljs-keyword">ON</span> idx.indexrelid <span class="hljs-operator">=</span> c.oid<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_description d <span class="hljs-keyword">ON</span> idx.indexrelid <span class="hljs-operator">=</span> d.objoid<br><span class="hljs-keyword">WHERE</span> idx.indrelid <span class="hljs-operator">=</span> v_table_oid<br>    LOOP<br>            v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;COMMENT ON INDEX &quot;&#x27;</span><br>                               <span class="hljs-operator">||</span> v_index_comment_record.relname <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot; IS &#x27;&#x27;&#x27;</span><br>                               <span class="hljs-operator">||</span> replace(v_index_comment_record.description, <span class="hljs-string">&#x27;&#x27;&#x27;&#x27;</span>, <span class="hljs-string">&#x27;&#x27;&#x27;&#x27;&#x27;&#x27;</span>) <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&#x27;&#x27;;&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><span class="hljs-keyword">END</span> LOOP;<br><br>    <span class="hljs-comment">-- comment on constraint</span><br><span class="hljs-keyword">FOR</span> v_constraint_comment_record <span class="hljs-keyword">IN</span><br><span class="hljs-keyword">SELECT</span><br>    con.conname,<br>    pg_description.description<br><span class="hljs-keyword">FROM</span> pg_catalog.pg_constraint con<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_class rel <span class="hljs-keyword">ON</span> rel.oid <span class="hljs-operator">=</span> con.conrelid<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_namespace nsp <span class="hljs-keyword">ON</span> nsp.oid <span class="hljs-operator">=</span> connamespace<br>         <span class="hljs-keyword">JOIN</span> pg_catalog.pg_description <span class="hljs-keyword">ON</span> pg_description.objoid <span class="hljs-operator">=</span> con.oid<br><span class="hljs-keyword">WHERE</span> rel.oid <span class="hljs-operator">=</span> v_table_oid<br>    LOOP<br>            v_table_ddl :<span class="hljs-operator">=</span> v_table_ddl <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;COMMENT ON CONSTRAINT &quot;&#x27;</span><br>                               <span class="hljs-operator">||</span> v_constraint_comment_record.conname <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot; ON &quot;&#x27;</span> <span class="hljs-operator">||</span> in_table_name <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&quot; IS &#x27;&#x27;&#x27;</span><br>                               <span class="hljs-operator">||</span> replace(v_constraint_comment_record.description, <span class="hljs-string">&#x27;&#x27;&#x27;&#x27;</span>, <span class="hljs-string">&#x27;&#x27;&#x27;&#x27;&#x27;&#x27;</span>) <span class="hljs-operator">||</span> <span class="hljs-string">&#x27;&#x27;&#x27;;&#x27;</span> <span class="hljs-operator">||</span> E<span class="hljs-string">&#x27;\n&#x27;</span>;<br><span class="hljs-keyword">END</span> LOOP;<br><br>    <span class="hljs-comment">-- return the ddl</span><br><span class="hljs-keyword">RETURN</span> v_table_ddl;<br><span class="hljs-keyword">END</span><br>$$;<br><br><span class="hljs-comment">-- 替换为你的用户</span><br><span class="hljs-keyword">alter</span> <span class="hljs-keyword">function</span> show_create_table(<span class="hljs-type">varchar</span>) owner <span class="hljs-keyword">to</span> your_user;<br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="客户端调整"><a href="#客户端调整" class="headerlink" title="客户端调整"></a>客户端调整</h3><h4 id="上下文"><a href="#上下文" class="headerlink" title="上下文"></a>上下文</h4><p>内部维护了一个栈结构保存知识库版本用于处理 <code>Schema</code> 切换的嵌套情况，例如：</p>
+<ol>
+<li>在某个业务逻辑中需要切换到<code>Schema A</code>。</li>
+<li>在这个业务逻辑的某个方法内部调用了另一个方法，这个方法需要切换到<code>Schema B</code>。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DynamicSchemaContextHolder</span> &#123;<br><br>    <span class="hljs-comment">// 保存知识库版本</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> ThreadLocal&lt;Deque&lt;String&gt;&gt; SCHEME_KEY_HOLDER = TransmittableThreadLocal.withInitial(ArrayDeque::<span class="hljs-keyword">new</span>);<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-title function_">DynamicSchemaContextHolder</span><span class="hljs-params">()</span> &#123;&#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> String <span class="hljs-title function_">peek</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> SCHEME_KEY_HOLDER.get().peek();<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">push</span><span class="hljs-params">(String ds)</span> &#123;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">schemeKeyStr</span> <span class="hljs-operator">=</span> StrUtil.isEmpty(ds) ? StrUtil.EMPTY : ds;<br>        SCHEME_KEY_HOLDER.get().push(schemeKeyStr);<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">poll</span><span class="hljs-params">()</span> &#123;<br>        Deque&lt;String&gt; deque = SCHEME_KEY_HOLDER.get();<br>        deque.poll();<br>        <span class="hljs-keyword">if</span> (deque.isEmpty()) &#123;<br>            SCHEME_KEY_HOLDER.remove();<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">clear</span><span class="hljs-params">()</span> &#123;<br>        SCHEME_KEY_HOLDER.remove();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h4 id="管理器"><a href="#管理器" class="headerlink" title="管理器"></a>管理器</h4><p>使用一个 <code>Manager</code> 管理以下属性：</p>
+<ul>
+<li>默认 <code>Schema</code> ，根据版本号无法找到对应 <code>Schema</code> 时切换到默认 <code>Schema</code></li>
+<li>知识库表，动态切换 <code>Schema</code> 时需要判断表是否存在该集合中，存在即替换，否则默认使用<code>public Schema</code></li>
+<li>知识库版本对应的 <code>Schema</code> 名称</li>
+<li>知识库版本对应的作业（一对多）</li>
+</ul>
+<p>这个类的主要作用是更新知识库时，将添加的知识库和Schema保存起来，拦截器中根据版本号获取<code>Schema</code> 等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Slf4j</span><br><span class="hljs-meta">@Component</span><br><span class="hljs-meta">@RequiredArgsConstructor</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DynamicSchemaManager</span> &#123;<br>    <span class="hljs-comment">// 默认schema</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">DEFAULT_SCHEMA</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;public&quot;</span>;<br><br>    <span class="hljs-comment">// 最新版本知识库</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-type">String</span> <span class="hljs-variable">LATEST_VERSION</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;public&quot;</span>;<br>    <span class="hljs-comment">// 保存知识库相关的表，用于在sql中判断是否需要切换schema，存在此集合中的表需要切换schema</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> Set&lt;String&gt; SYNC_TABLE_NAMES = <span class="hljs-keyword">new</span> <span class="hljs-title class_">HashSet</span>&lt;&gt;();<br>    <span class="hljs-comment">// key: version, value: schemaName</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> Map&lt;String, String&gt; SCHEME_KEY_MAP = Maps.newConcurrentMap();<br>    <span class="hljs-comment">// key:version, value:operationId</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> Multimap&lt;String, String&gt; VERSION_WORK = Multimaps.newMultimap(Maps.newHashMap(), HashSet::<span class="hljs-keyword">new</span>);<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> CoOperationMapper coOperationMapper;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> LibrarySyncConfigMapper librarySyncConfigMapper;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> LibrarySyncTablesMapper librarySyncTablesMapper;<br><br>    <span class="hljs-meta">@PostConstruct</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">init</span><span class="hljs-params">()</span> &#123;<br>        List&lt;LibrarySyncConfig&gt; configs = librarySyncConfigMapper.selectList(<span class="hljs-keyword">new</span> <span class="hljs-title class_">QueryWrapper</span>&lt;&gt;());<br>        <span class="hljs-keyword">if</span> (CollUtil.isNotEmpty(configs))<br>            configs.forEach(config -&gt; &#123;<br>                SCHEME_KEY_MAP.put(config.getVersion(), config.getSchemaName());<br>                log.info(<span class="hljs-string">&quot;dynamic-schema - add a schema named [&#123;&#125;] success&quot;</span>, config.getSchemaName());<br>                <span class="hljs-keyword">if</span> (config.getIsLatest()) &#123;<br>                    LATEST_VERSION = config.getVersion();<br>                    log.info(<span class="hljs-string">&quot;dynamic-schema - set the latest schema named [&#123;&#125;] success&quot;</span>, config.getSchemaName());<br>                &#125;<br>            &#125;);<br>        Set&lt;String&gt; librarySyncTables = librarySyncTablesMapper.selectSyncTableNames();<br>        SYNC_TABLE_NAMES.addAll(librarySyncTables);<br>        List&lt;Pair&lt;String, String&gt;&gt; pairs = coOperationMapper.selectLibraryVersion();<br>        <span class="hljs-keyword">if</span> (CollUtil.isNotEmpty(pairs))<br>            pairs.forEach(pair -&gt; VERSION_WORK.put(pair.getKey(), pair.getValue()));<br>        log.info(<span class="hljs-string">&quot;dynamic-schema - init success&quot;</span>);<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 根据版本号获取schema</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> String <span class="hljs-title function_">getSchema</span><span class="hljs-params">(String version)</span> &#123;<br>        <span class="hljs-keyword">if</span> (StrUtil.isEmpty(version)) &#123;<br>            <span class="hljs-keyword">return</span> determineDefaultSchema();<br>        &#125;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">schemaName</span> <span class="hljs-operator">=</span> SCHEME_KEY_MAP.get(version);<br>        <span class="hljs-keyword">if</span> (StrUtil.isEmpty(schemaName)) &#123;<br>            schemaName = determineDefaultSchema();<br>            log.warn(<span class="hljs-string">&quot;dynamic-schema - can not find the schema named [&#123;&#125;], switch to the default schema [&#123;&#125;]&quot;</span>, version, schemaName);<br>        &#125;<br>        log.debug(<span class="hljs-string">&quot;dynamic-schema - switch to the schema named [&#123;&#125;]&quot;</span>, schemaName);<br>        <span class="hljs-keyword">return</span> schemaName;<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 选择默认schema</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> String <span class="hljs-title function_">determineDefaultSchema</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> DEFAULT_SCHEMA;<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 添加schema</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">synchronized</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">addSchema</span><span class="hljs-params">(String version, String schemaName)</span> &#123;<br>        SCHEME_KEY_MAP.put(version, schemaName);<br>        log.info(<span class="hljs-string">&quot;dynamic-schema - add a schema named [&#123;&#125;] success&quot;</span>, schemaName);<br>        LATEST_VERSION = version;<br>        log.info(<span class="hljs-string">&quot;dynamic-schema - set the latest schema named [&#123;&#125;] success&quot;</span>, schemaName);<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 删除schema</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">removeSchema</span><span class="hljs-params">(String version)</span> &#123;<br>        SCHEME_KEY_MAP.remove(version);<br>        log.info(<span class="hljs-string">&quot;dynamic-schema - remove a schema named [&#123;&#125;] success&quot;</span>, version);<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 判断sql中是否包含需要切换schema的表</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">isContainsSyncTable</span><span class="hljs-params">(String sql)</span> &#123;<br>        <span class="hljs-keyword">return</span> SYNC_TABLE_NAMES.stream().map(String::toLowerCase).anyMatch(sql::contains);<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 获取需要切换schema的表</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Set&lt;String&gt; <span class="hljs-title function_">getSyncTableNames</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> SYNC_TABLE_NAMES;<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 获取版本号</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> String <span class="hljs-title function_">getVersion</span><span class="hljs-params">(String operationId)</span> &#123;<br>        <span class="hljs-keyword">if</span> (!VERSION_WORK.containsValue(operationId))<br>            <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;<br>        <span class="hljs-keyword">for</span> (Map.Entry&lt;String, Collection&lt;String&gt;&gt; entry : VERSION_WORK.asMap().entrySet()) &#123;<br>            Collection&lt;String&gt; values = entry.getValue();<br>            <span class="hljs-keyword">if</span> (values.contains(operationId))<br>                <span class="hljs-keyword">return</span> entry.getKey();<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 获取最新版本号</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">synchronized</span> String <span class="hljs-title function_">getLatestVersion</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> LATEST_VERSION;<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 添加版本号</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">synchronized</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">addVersion</span><span class="hljs-params">(String version, String operationId)</span> &#123;<br>        VERSION_WORK.put(version, operationId);<br>    &#125;<br><br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">     * 删除版本号中的作业id</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">synchronized</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">removeVersionWork</span><span class="hljs-params">(String operationId)</span> &#123;<br>        <span class="hljs-keyword">if</span> (!VERSION_WORK.containsValue(operationId))<br>            <span class="hljs-keyword">return</span>;<br>        <span class="hljs-keyword">for</span> (Map.Entry&lt;String, Collection&lt;String&gt;&gt; entry : VERSION_WORK.asMap().entrySet()) &#123;<br>            Collection&lt;String&gt; values = entry.getValue();<br>            <span class="hljs-keyword">if</span> (values.contains(operationId)) &#123;<br>                values.remove(operationId);<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="自定义切换注解"><a href="#自定义切换注解" class="headerlink" title="自定义切换注解"></a>自定义切换注解</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Documented</span><br><span class="hljs-meta">@Retention(RetentionPolicy.RUNTIME)</span><br><span class="hljs-meta">@Target(&#123;ElementType.METHOD&#125;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-meta">@interface</span> SchemaSwitch &#123;<br><br>    <span class="hljs-comment">// 指定包含作业id的类，作业id用于查找知识库版本</span><br>    Class&lt;?&gt; value() <span class="hljs-keyword">default</span> LatestVersion.class;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="切面"><a href="#切面" class="headerlink" title="切面"></a>切面</h3><p>获取注解上配置的 <code>Class</code>，因为该<code>Class</code> 配置为包含作业 <code>id</code> 的类。</p>
+<p>通过反射获取作业 <code>id</code>，通过作业 <code>id</code> 获取对应的知识库版本，如果版本号不为空，则放入到当前线程的本地线程变量中。</p>
+<p>这里注意方法执行完之后要调用 <code>clear()</code> 清理，防止内存溢出。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Aspect</span><br><span class="hljs-meta">@Component</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">SchemaAspect</span> &#123;<br><br>    <span class="hljs-meta">@Pointcut(&quot;@annotation(com.dcas.common.annotation.SchemaSwitch)&quot;)</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">switchSchema</span><span class="hljs-params">()</span> &#123;<br>    &#125;<br><br>    <span class="hljs-meta">@Around(&quot;switchSchema()&quot;)</span><br>    <span class="hljs-keyword">public</span> Object <span class="hljs-title function_">around</span><span class="hljs-params">(ProceedingJoinPoint pointcut)</span> <span class="hljs-keyword">throws</span> Throwable &#123;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">version</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">operationId</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;<br>        <span class="hljs-type">MethodSignature</span> <span class="hljs-variable">signature</span> <span class="hljs-operator">=</span> (MethodSignature)pointcut.getSignature();<br>        <span class="hljs-type">SchemaSwitch</span> <span class="hljs-variable">annotation</span> <span class="hljs-operator">=</span> signature.getMethod().getAnnotation(SchemaSwitch.class);<br>        Class&lt;?&gt; clazz = annotation.value();<br>        <span class="hljs-keyword">if</span> (clazz == LatestVersion.class) &#123;<br>            <span class="hljs-comment">// 默认切换最新版本知识库</span><br>            version = DynamicSchemaManager.getLatestVersion();<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            Object[] args = pointcut.getArgs();<br>            <span class="hljs-keyword">for</span> (Object arg : args) &#123;<br>                <span class="hljs-keyword">if</span> (arg.getClass() != clazz)<br>                    <span class="hljs-keyword">continue</span>;<br>                <span class="hljs-type">Object</span> <span class="hljs-variable">obj</span> <span class="hljs-operator">=</span> JSONObject.parseObject(JSON.toJSONString(arg), clazz);<br>                <span class="hljs-keyword">if</span> (clazz == String.class || clazz == Integer.class) &#123;<br>                    operationId = obj.toString();<br>                &#125; <span class="hljs-keyword">else</span> &#123;<br>                    operationId = ReflectUtil.getFieldValue(obj, <span class="hljs-string">&quot;operationId&quot;</span>).toString();<br>                &#125;<br>                <span class="hljs-keyword">if</span> (StrUtil.isEmpty(operationId))<br>                    <span class="hljs-keyword">continue</span>;<br>                version = DynamicSchemaManager.getVersion(operationId);<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">if</span> (StrUtil.isNotEmpty(version))<br>            DynamicSchemaContextHolder.push(version);<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-keyword">return</span> pointcut.proceed();<br>        &#125; <span class="hljs-keyword">finally</span> &#123;<br>            DynamicSchemaContextHolder.clear();<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="动态替换"><a href="#动态替换" class="headerlink" title="动态替换"></a>动态替换</h3><p>前面所有的操作都是为了接下来的这一步做铺垫，要动态切换知识库相关表所在的<code>Schema</code>，我们现在已经将知识库版本放入到了本地线程变量，只需要通过 <code>DynamicSchemaManager</code> 的 <code>getSchema(String version)</code> 方法获取版本对应的 <code>schema</code> 名称，然后将名称设置到 <code>sql </code>的表名前面。</p>
+<h4 id="占位符"><a href="#占位符" class="headerlink" title="占位符"></a>占位符</h4><p>很容易想到的一种方法就是在 <code>xxxMapper.xml</code> 文件中需要动态切换 <code>Schema</code> 的表名前面加上占位符，然后将 <code>Schema</code> 名称通过参数传入。</p>
+<p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java">T <span class="hljs-title function_">methodA</span><span class="hljs-params">(<span class="hljs-meta">@Param(&quot;schema&quot;)</span> String schema)</span>;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span><br><span class="hljs-keyword">from</span> t1<br>         <span class="hljs-keyword">inner</span> <span class="hljs-keyword">join</span> #&#123;schema&#125;.t2 <span class="hljs-keyword">on</span> t1.template_id <span class="hljs-operator">=</span> t2.id<br>         <span class="hljs-keyword">inner</span> <span class="hljs-keyword">join</span> #&#123;schema&#125; <span class="hljs-keyword">on</span> t3.template_id <span class="hljs-operator">=</span> t2.id;<br></code></pre></td></tr></table></figure>
+
+<p>额。。。兄弟，前面都挺好的，怎么到你这这么拉了？</p>
+<p>这种方法无疑有大量的改动，而且对于每次新增方法也要同步修改，别说你们我都忍不了。</p>
+<p>难道还有更好的办法？</p>
+<h3 id="拦截器"><a href="#拦截器" class="headerlink" title="拦截器"></a>拦截器</h3><p><code>org.apache.ibatis.plugin.Interceptor</code> 是 <code>MyBatis</code> 提供的拦截器接口，可以用于在 <code>MyBatis</code> 执行 <code>SQL</code> 语句的各个阶段进行拦截和干预。</p>
+<p>通过实现这个接口，我们可以在 <code>SQL</code> 语句执行前后，以及执行期间做一些额外的处理。</p>
+<p>由于我的项目中使用了 <code>MybatisPlus</code>, 已经实现了拦截器接口，另外做了一层封装，提供了<code>InnerInterceptor</code> 接口，只需要实现这个接口就可以对待执行的 <code>SQL</code> 进行一些修改逻辑。</p>
+<p><img src="https://image.seeyourface.cn/migrate/image-20231116175130355.png" srcset="/img/loading.gif" lazyload alt="image-20231116175130355"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">SchemaSelectInterceptor</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">InnerInterceptor</span> &#123;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">beforeQuery</span><span class="hljs-params">(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)</span> &#123;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">sql</span> <span class="hljs-operator">=</span> boundSql.getSql();<br>        <span class="hljs-comment">// 简单判断sql中是否包含涉及的知识库表，不包含的话就不用解析了</span><br>        <span class="hljs-keyword">if</span> (!isContainsSyncTable(sql)) &#123;<br>            <span class="hljs-keyword">return</span>;<br>        &#125;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">version</span> <span class="hljs-operator">=</span> DynamicSchemaContextHolder.peek();<br>        <span class="hljs-type">String</span> <span class="hljs-variable">schema</span> <span class="hljs-operator">=</span> DynamicSchemaManager.getSchema(version);<br>        <span class="hljs-type">PGSQLStatementParser</span> <span class="hljs-variable">parser</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">PGSQLStatementParser</span>(sql);<br>        <span class="hljs-type">SQLStatement</span> <span class="hljs-variable">sqlStatement</span> <span class="hljs-operator">=</span> parser.parseStatement();<br>        <span class="hljs-comment">// 访问器</span><br>        <span class="hljs-type">SchemaSwitchVisitorAdapter</span> <span class="hljs-variable">visitor</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">SchemaSwitchVisitorAdapter</span>(schema, DynamicSchemaManager.getSyncTableNames());<br>        sqlStatement.accept(visitor);<br>        PluginUtils.mpBoundSql(boundSql).sql(SQLUtils.toSQLString(sqlStatement, DbType.postgresql));<br>    &#125;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">isContainsSyncTable</span><span class="hljs-params">(String sql)</span> &#123;<br>        <span class="hljs-keyword">return</span> DynamicSchemaManager.isContainsSyncTable(sql.toLowerCase());<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>我们现在能拦截执行前的 <code>SQL</code>，现在剩下的首要任务就是将需要替换<code>schema</code>的表正确替换，考虑到有一些表有很相似的名称，不能简单进行 <code>replace</code>。</p>
+<p>这里我使用了阿里 <code>Druid</code> 数据源提供的 <code>SQL</code> 解析器 <code>PGSQLStatementParser</code>，我们先大概判断有没有需要替换的表，没有的话就没必要进行解析了。</p>
+<p>然后自定义一个 <code>AST</code> 节点访问器 <code>SchemaSwitchVisitorAdapter</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@AllArgsConstructor</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">SchemaSwitchVisitorAdapter</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">PGASTVisitorAdapter</span> &#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">DOUBLE_QUOTE</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;\&quot;&quot;</span>;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> String schema;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Set&lt;String&gt; syncTables;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">visit</span><span class="hljs-params">(SQLExprTableSource x)</span> &#123;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">tableName</span> <span class="hljs-operator">=</span> StrUtil.removeAll(x.getExpr().toString(), DOUBLE_QUOTE);<br>        <span class="hljs-keyword">if</span> (syncTables.stream().anyMatch(tableName::equalsIgnoreCase))<br>            x.setExpr(DOUBLE_QUOTE + schema + DOUBLE_QUOTE + StrUtil.DOT + tableName);<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>通过构造函数传入待替换的 <code>Schema</code> 和知识库的表，判断当前访问的表是否存在于知识库表中，如果是的话就在前面加上要替换的 <code>Schema</code>。</p>
+<p>通过这种操作，我们无需修改原先的任何 <code>SQL</code>。</p>
+<p>最后不要忘记在配置类中加入我们自定义的拦截器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Configuration</span><br><span class="hljs-meta">@EnableTransactionManagement(proxyTargetClass = true)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MybatisPlusConfig</span> &#123;<br><br>    <span class="hljs-meta">@Bean</span><br>    <span class="hljs-keyword">public</span> MybatisPlusInterceptor <span class="hljs-title function_">mybatisPlusInterceptor</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-type">MybatisPlusInterceptor</span> <span class="hljs-variable">interceptor</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">MybatisPlusInterceptor</span>();<br>        <span class="hljs-comment">// schema选择组件</span><br>        interceptor.addInnerInterceptor(schemaSelectInterceptor());<br>        <span class="hljs-keyword">return</span> interceptor;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * schema选择组件</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> SchemaSelectInterceptor <span class="hljs-title function_">schemaSelectInterceptor</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">SchemaSelectInterceptor</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="最终效果"><a href="#最终效果" class="headerlink" title="最终效果"></a>最终效果</h3><figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs tex">18:03:23.208 [http-nio-8080-exec-55] DEBUG c.d.s.m.DynamicSchemaManager - [getSchema,80] - dynamic-schema - switch to the schema named [20231115171241]<br>18:03:23.213 [http-nio-8080-exec-55] DEBUG c.d.s.m.A.qryByTemplateType - [debug,137] - ==&gt;  Preparing: SELECT t1.&quot;name&quot;, t4.bp<span class="hljs-built_in">_</span>code, t4.&quot;stage&quot;, t4.&quot;process&quot;, t4.dimension , t4.&quot;content&quot;, t4.&quot;level&quot;, t6.id AS itemId FROM &quot;20231115171241&quot;.analysis<span class="hljs-built_in">_</span>template t1 INNER JOIN &quot;20231115171241&quot;.standard<span class="hljs-built_in">_</span>template<span class="hljs-built_in">_</span>relevance t2 ON t1.&quot;id&quot; = t2.template<span class="hljs-built_in">_</span>id INNER JOIN &quot;20231115171241&quot;.standard t3 ON t2.standard<span class="hljs-built_in">_</span>id = t3.&quot;id&quot; AND t3.&quot;enable&quot; = true INNER JOIN &quot;20231115171241&quot;.standard<span class="hljs-built_in">_</span>item t4 ON t3.&quot;id&quot; = t4.standard<span class="hljs-built_in">_</span>id LEFT JOIN &quot;20231115171241&quot;.clause<span class="hljs-built_in">_</span>item<span class="hljs-built_in">_</span>relevance t5 ON t4.&quot;id&quot; = t5.clause<span class="hljs-built_in">_</span>id LEFT JOIN &quot;20231115171241&quot;.item t6 ON t5.item<span class="hljs-built_in">_</span>id = t6.id AND t6.status = 0 WHERE t1.&quot;type&quot; = ? AND t4.&quot;level&quot; = ?<br>18:03:23.213 [http-nio-8080-exec-55] DEBUG c.d.s.m.A.qryByTemplateType - [debug,137] - ==&gt; Parameters: 1(Integer), 3(Integer)<br>18:03:23.255 [http-nio-8080-exec-55] DEBUG c.d.s.m.A.qryByTemplateType - [debug,137] - &lt;==      Total: 385<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" class="category-chain-item">中间件</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90/" class="category-chain-item">动态数据源</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90/" class="print-no-link">#动态数据源</a>
+      
+        <a href="/tags/Schema/" class="print-no-link">#Schema</a>
+      
+        <a href="/tags/%E8%81%94%E8%A1%A8%E6%9F%A5%E8%AF%A2%E5%88%87%E6%8D%A2/" class="print-no-link">#联表查询切换</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>如何优雅切换联表查询表格所使用的Schema</div>
+      <div>https://seeyourface.cn/2023/11/16/如何优雅切换联表查询表格所使用的Schema/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yang Lei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年11月16日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/11/10/%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%89%88%E6%9C%AC%E5%86%85%E5%AE%B9%E5%BA%93%E5%88%87%E6%8D%A2/" title="动态数据源实现多版本内容库切换">
+                        <span class="hidden-mobile">动态数据源实现多版本内容库切换</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

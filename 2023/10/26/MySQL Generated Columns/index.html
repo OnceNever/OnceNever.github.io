@@ -1,0 +1,741 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <link rel="icon" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yang Lei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="序言MySQL 5.7 引入了生成列（Generated Columns 还有一种虚拟列的叫法）的支持。生成列中的值由列定义的表达式计算得出。 创建生成列创建生成的列语法定义如下： 1234col_name data_type [GENERATED ALWAYS] AS (expr)  [VIRTUAL | STORED] [NOT NULL | NULL]  [UNIQUE [KEY]] [[P">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL Generated Columns">
+<meta property="og:url" content="https://seeyourface.cn/2023/10/26/MySQL%20Generated%20Columns/index.html">
+<meta property="og:site_name" content="Keinmal">
+<meta property="og:description" content="序言MySQL 5.7 引入了生成列（Generated Columns 还有一种虚拟列的叫法）的支持。生成列中的值由列定义的表达式计算得出。 创建生成列创建生成的列语法定义如下： 1234col_name data_type [GENERATED ALWAYS] AS (expr)  [VIRTUAL | STORED] [NOT NULL | NULL]  [UNIQUE [KEY]] [[P">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-10-26T03:14:50.000Z">
+<meta property="article:modified_time" content="2023-11-29T14:44:48.541Z">
+<meta property="article:author" content="Yang Lei">
+<meta property="article:tag" content="数据库">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="数据类型">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>MySQL Generated Columns - Keinmal</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"seeyourface.cn","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":100,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Keinmal</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://image.seeyourface.cn/migrate/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="MySQL Generated Columns"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-10-26 11:14" pubdate>
+          2023年10月26日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          23 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">MySQL Generated Columns</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h3><p><code>MySQL 5.7</code> 引入了生成列（<code>Generated Columns</code> 还有一种虚拟列的叫法）的支持。生成列中的值由列定义的表达式计算得出。</p>
+<h3 id="创建生成列"><a href="#创建生成列" class="headerlink" title="创建生成列"></a>创建生成列</h3><p>创建生成的列语法定义如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sql">col_name data_type [GENERATED ALWAYS] <span class="hljs-keyword">AS</span> (expr)<br>  [VIRTUAL <span class="hljs-operator">|</span> STORED] [<span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-operator">|</span> <span class="hljs-keyword">NULL</span>]<br>  [<span class="hljs-keyword">UNIQUE</span> [KEY]] [[<span class="hljs-keyword">PRIMARY</span>] KEY]<br>  [COMMENT <span class="hljs-string">&#x27;string&#x27;</span>]<br></code></pre></td></tr></table></figure>
+
+<p><code>AS (expr)</code> 表示生成列的同时定义用于计算生成列值的表达式。</p>
+<p><code>AS</code> 前面可以选择性的加上 <code>GENERATED ALWAYS</code>，使列的生成性质更加明确。</p>
+<p>关键字 <code>VIRTUAL</code> 或 <code>STORED</code> 表示列值的存储方式，它对列的使用有影响：</p>
+<ul>
+<li><code>VIRTUAL</code> : 列值不会被存储，不占用任何存储空间。而是在读取行时计算，同时在执行触发器（特别是 BEFORE 触发器，它们在插入、更新或删除操作之前执行）之后，虚拟列的值会被计算。这是因为虚拟列的值通常<strong>依赖于其他列的值或特定的表达式</strong>，而这些值可能会在触发器中进行修改。因此，虚拟列的值需要在触发器执行之后计算，以确保它们反映最新的数据。<code>InnoDB</code> 支持虚拟列上的二级索引。</li>
+<li><code>STORED</code> : 插入或更新行时，会计算并存储列值。存储列需要存储空间，并可编制索引。</li>
+</ul>
+<p>如果以上两个关键字都未指定，则默认为 <code>VIRTUAL</code>。</p>
+<p>允许在表中混合使用 <code>VIRTUAL</code> 列和 <code>STORED</code> 列。</p>
+<p>还可以给出其他属性，例如生成列是否需要建立索引或是否可以为 <code>NULL</code>，以及提供列注释等。</p>
+<p>对于 <code>CREATE TABLE ...LIKE</code>，目标表会<strong>保留</strong>原始表中生成的列信息。</p>
+<p>对于 <code>CREATE TABLE ...SELECT</code> ，目标表<strong>不保留</strong>关于选自表中的列是否为生成列的信息。语句的 SELECT 部分不能为目标表中的生成列赋值。</p>
+<p>下面这个简单的例子创建了一个表，该表存储了 <code>sidea</code> 和 <code>sidb</code> 列中直角三角形边的长度，并计算<code>sidec</code> 中斜边的长度（其他两边的平方和的平方根）：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> triangle (<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>   sidea <span class="hljs-keyword">DOUBLE</span>,<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>   sideb <span class="hljs-keyword">DOUBLE</span>,<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>   sidec <span class="hljs-keyword">DOUBLE</span> <span class="hljs-keyword">AS</span> (<span class="hljs-built_in">SQRT</span>(sidea <span class="hljs-operator">*</span> sidea <span class="hljs-operator">+</span> sideb <span class="hljs-operator">*</span> sideb))<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> );<br>Query OK, <span class="hljs-number">0</span> <span class="hljs-keyword">rows</span> affected (<span class="hljs-number">0.12</span> sec)<br></code></pre></td></tr></table></figure>
+
+<p>插入数据：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> triangle (sidea, sideb) <span class="hljs-keyword">VALUES</span>(<span class="hljs-number">1</span>,<span class="hljs-number">1</span>),(<span class="hljs-number">3</span>,<span class="hljs-number">4</span>),(<span class="hljs-number">6</span>,<span class="hljs-number">8</span>);<br></code></pre></td></tr></table></figure>
+
+<p>从该表中查询会得到以下结果：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> triangle;<br><span class="hljs-operator">+</span><span class="hljs-comment">-------+-------+--------------------+</span><br><span class="hljs-operator">|</span> sidea <span class="hljs-operator">|</span> sideb <span class="hljs-operator">|</span> sidec              <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------+-------+--------------------+</span><br><span class="hljs-operator">|</span>     <span class="hljs-number">1</span> <span class="hljs-operator">|</span>     <span class="hljs-number">1</span> <span class="hljs-operator">|</span> <span class="hljs-number">1.4142135623730951</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span>     <span class="hljs-number">3</span> <span class="hljs-operator">|</span>     <span class="hljs-number">4</span> <span class="hljs-operator">|</span>                  <span class="hljs-number">5</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span>     <span class="hljs-number">6</span> <span class="hljs-operator">|</span>     <span class="hljs-number">8</span> <span class="hljs-operator">|</span>                 <span class="hljs-number">10</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">-------+-------+--------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>任何使用 <code>triangle</code> 表的应用程序都可以直接访问斜边值，而无需指定计算斜边值的表达式。</p>
+<h3 id="生成列表达式规则"><a href="#生成列表达式规则" class="headerlink" title="生成列表达式规则"></a>生成列表达式规则</h3><p>如果表达式中包含不被允许的结构，则会发生错误，所以生成的列表达式必须遵守以下规则：</p>
+<ul>
+<li>允许使用字面量、确定性内置函数和运算符。<strong>如果在表格数据相同的情况下，多次调用只会产生相同的结果，而与所连接的用户无关，那么这个函数就是确定的</strong>。</li>
+<li>不允许使用存储函数和可加载函数。</li>
+<li>不允许使用存储过程和函数参数。</li>
+<li>不允许使用变量（包括系统变量、用户定义变量和存储的程序局部变量）。</li>
+<li>不允许使用子查询。</li>
+<li>生成列的定义<strong>可以引用其他生成列，但只能引用表定义中较早出现的生成列</strong>。生成的列定义可以引用表中的<strong>任何基础（非生成）列</strong>，无论其定义出现的时间是早还是晚。</li>
+<li>生成的列定义中不能使用 <code>AUTO_INCREMENT</code> 属性。</li>
+<li>在生成列定义中，<code>AUTO_INCREMENT</code> 列不能被作为基列。</li>
+<li>如果表达式求值导致截断或为函数提供了不正确的输入，则 <code>CREATE TABLE</code> 语句将以错误结束，<code>DDL</code> 操作将被拒绝。</li>
+</ul>
+<blockquote>
+<p>注意：如果表达式求值的数据类型与声明的列类型不同，则会根据 <code>MySQL</code> 默认的隐式类型转换规则强制转换为声明的类型。</p>
+<p>表达式计算使用计算时有效的 <code>SQL</code> 模式。如果表达式定义的任何部分依赖于 <code>SQL</code> 模式，那么除非在所有使用过程中 <code>SQL</code> 模式都相同，否则不同的表格使用过程中可能会出现不同的结果。</p>
+</blockquote>
+<h4 id="约束"><a href="#约束" class="headerlink" title="约束"></a>约束</h4><ul>
+<li>存储生成列上的外键约束不能使用 <code>CASCADE</code>、<code>SET NULL</code> 或 <code>SET DEFAULT</code> 作为 <code>ON UPDATE</code> 引用操作，也不能使用 <code>SET NULL</code> 或 <code>SET DEFAULT</code> 作为 <code>ON DELETE</code> 引用操作。</li>
+<li>存储生成列的基列上的外键约束不能使用 <code>CASCADE</code>、<code>SET NULL</code> 或 <code>SET DEFAULT</code> 作为 <code>ON UPDATE</code> 或 <code>ON DELETE</code> 引用操作。</li>
+<li>外键约束不能引用虚拟生成的列。</li>
+<li>对于 <code>INSERT</code>、<code>REPLACE</code> 和 <code>UPDATE</code>，如果生成的列被明确插入、替换或更新，则唯一允许的值是 <code>DEFAULT</code>。</li>
+</ul>
+<p>视图中的生成列被认为是可更新的，因为可以对其进行赋值。但是，如果要显式更新该列，则唯一允许的值是 <code>DEFAULT</code>。</p>
+<h3 id="生成列使用场景"><a href="#生成列使用场景" class="headerlink" title="生成列使用场景"></a>生成列使用场景</h3><p>生成列有几种使用情况，比如下面这些：</p>
+<ul>
+<li>虚拟生成列可以用来简化和统一查询。一个复杂的条件可以定义为一个生成列，并在表的多个查询中引用，以确保所有查询都使用完全相同的条件。</li>
+<li>存储生成的列可用作物化缓存，用于处理计算成本较高的复杂条件。</li>
+<li>生成列可以模拟函数式索引：使用生成的列来定义函数表达式并为其建立索引。这对于处理无法直接建立索引的列类型（如 <code>JSON</code> 列）非常有用。对于存储生成列，这种方法的缺点是要存储两次值，一次是生成列的值，另一次是索引中的值。</li>
+<li>如果生成的列有索引，优化器会识别与列定义相匹配的查询表达式，即使查询没有直接引用列名，查询执行过程中也会酌情使用列索引。</li>
+</ul>
+<p>举例：</p>
+<p>假设表 <code>t1</code> 包含名和姓两列，应用程序经常使用这样的表达式来构造全名：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> CONCAT(first_name,<span class="hljs-string">&#x27; &#x27;</span>,last_name) <span class="hljs-keyword">AS</span> full_name <span class="hljs-keyword">FROM</span> t1;<br></code></pre></td></tr></table></figure>
+
+<p>避免写出表达式的一种方法是在 <code>t1</code> 上创建视图 <code>v1</code>，这样就可以直接选择 <code>full_name</code>，而无需使用表达式，从而简化了应用程序：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">VIEW</span> v1 <span class="hljs-keyword">AS</span><br><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span>, CONCAT(first_name,<span class="hljs-string">&#x27; &#x27;</span>,last_name) <span class="hljs-keyword">AS</span> full_name <span class="hljs-keyword">FROM</span> t1;<br><br><span class="hljs-keyword">SELECT</span> full_name <span class="hljs-keyword">FROM</span> v1;<br></code></pre></td></tr></table></figure>
+
+<p>生成列还能让应用程序直接选择 <code>full_name</code>，而无需定义视图：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> t1 (<br>  first_name <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">10</span>),<br>  last_name <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">10</span>),<br>  full_name <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">AS</span> (CONCAT(first_name,<span class="hljs-string">&#x27; &#x27;</span>,last_name))<br>);<br><br><span class="hljs-keyword">SELECT</span> full_name <span class="hljs-keyword">FROM</span> t1;<br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="生成列使用索引"><a href="#生成列使用索引" class="headerlink" title="生成列使用索引"></a>生成列使用索引</h3><p>上一篇文章所提到，<code>JSON</code> 列无法直接建立索引。要创建间接引用此类列的索引，可以定义一个生成列来提取应被索引的信息，然后在生成列上创建索引。</p>
+<p>下面的例子我们将在生成列上创建间接引用 <code>JSON</code> 列的索引：</p>
+<p>首先我们创建一个班级表，<code>student</code> 保存学生信息，<code>g</code> 表示引用 <code>student</code> 中的 <code>id</code> 生成的虚拟列：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> CLASS (<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>          student JSON,    <br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>          g <span class="hljs-type">INT</span> GENERATED ALWAYS <span class="hljs-keyword">AS</span> (student <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> &quot;$.id&quot;),<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>          INDEX i (g)<br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span> );<br>Query OK, <span class="hljs-number">0</span> <span class="hljs-keyword">rows</span> affected (<span class="hljs-number">0.33</span> sec)<br></code></pre></td></tr></table></figure>
+
+<p>往表中插入数据：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> CLASS(student) <span class="hljs-keyword">VALUES</span> <br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>          (<span class="hljs-string">&#x27;&#123;&quot;id&quot;: &quot;1&quot;, &quot;name&quot;: &quot;小王&quot;&#125;&#x27;</span>), (<span class="hljs-string">&#x27;&#123;&quot;id&quot;: &quot;2&quot;, &quot;name&quot;: &quot;小李&quot;&#125;&#x27;</span>), <br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>          (<span class="hljs-string">&#x27;&#123;&quot;id&quot;: &quot;3&quot;, &quot;name&quot;: &quot;老张&quot;&#125;&#x27;</span>), (<span class="hljs-string">&#x27;&#123;&quot;id&quot;: &quot;4&quot;, &quot;name&quot;: &quot;老赵&quot;&#125;&#x27;</span>); <br>Query OK, <span class="hljs-number">4</span> <span class="hljs-keyword">rows</span> affected (<span class="hljs-number">0.03</span> sec)<br></code></pre></td></tr></table></figure>
+
+<p>查询：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">SELECT</span> student<span class="hljs-operator">-</span><span class="hljs-operator">&gt;&gt;</span>&quot;$.name&quot; <span class="hljs-keyword">AS</span> NAME  <br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>          <span class="hljs-keyword">FROM</span> CLASS <span class="hljs-keyword">WHERE</span> g <span class="hljs-operator">&gt;</span> <span class="hljs-number">2</span>;   <br><span class="hljs-operator">+</span><span class="hljs-comment">------+</span><br><span class="hljs-operator">|</span> NAME <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------+</span><br><span class="hljs-operator">|</span> 老张 <span class="hljs-operator">|</span><br><span class="hljs-operator">|</span> 老赵 <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">------+</span><br></code></pre></td></tr></table></figure>
+
+<p>然后来看一下这条 <code>SQL</code> 语句的执行计划：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sql">mysql<span class="hljs-operator">&gt;</span> EXPLAIN <span class="hljs-keyword">SELECT</span> student<span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>&quot;$.name&quot; <span class="hljs-keyword">AS</span> NAME <br>    <span class="hljs-operator">-</span><span class="hljs-operator">&gt;</span>          <span class="hljs-keyword">FROM</span> CLASS <span class="hljs-keyword">WHERE</span> g <span class="hljs-operator">&gt;</span> <span class="hljs-number">2</span>;<br><span class="hljs-operator">+</span><span class="hljs-comment">----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="hljs-operator">|</span> id <span class="hljs-operator">|</span> select_type <span class="hljs-operator">|</span> <span class="hljs-keyword">table</span> <span class="hljs-operator">|</span> partitions <span class="hljs-operator">|</span> type  <span class="hljs-operator">|</span> possible_keys <span class="hljs-operator">|</span> key  <span class="hljs-operator">|</span> key_len <span class="hljs-operator">|</span> <span class="hljs-keyword">ref</span>  <span class="hljs-operator">|</span> <span class="hljs-keyword">rows</span> <span class="hljs-operator">|</span> filtered <span class="hljs-operator">|</span> Extra       <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="hljs-operator">|</span>  <span class="hljs-number">1</span> <span class="hljs-operator">|</span> SIMPLE      <span class="hljs-operator">|</span> CLASS <span class="hljs-operator">|</span> <span class="hljs-keyword">NULL</span>       <span class="hljs-operator">|</span> <span class="hljs-keyword">range</span> <span class="hljs-operator">|</span> i             <span class="hljs-operator">|</span> i    <span class="hljs-operator">|</span> <span class="hljs-number">5</span>       <span class="hljs-operator">|</span> <span class="hljs-keyword">NULL</span> <span class="hljs-operator">|</span>    <span class="hljs-number">2</span> <span class="hljs-operator">|</span>   <span class="hljs-number">100.00</span> <span class="hljs-operator">|</span> <span class="hljs-keyword">Using</span> <span class="hljs-keyword">where</span> <span class="hljs-operator">|</span><br><span class="hljs-operator">+</span><span class="hljs-comment">----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>可以看到，这条查询语句使用到了索引 <code>i</code> , 也就是说我们可以通过对生成列中引用 <code>JSON</code> 中的属性并建立索引间接达到对 <code>JSON</code> 中的属性建立索引的效果。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/" class="category-chain-item">MySQL</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="print-no-link">#数据库</a>
+      
+        <a href="/tags/MySQL/" class="print-no-link">#MySQL</a>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="print-no-link">#数据类型</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>MySQL Generated Columns</div>
+      <div>https://seeyourface.cn/2023/10/26/MySQL Generated Columns/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yang Lei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年10月26日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2023/10/27/%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82+%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E4%BB%BB%E5%8A%A1%E5%AE%8C%E6%95%B4%E6%80%A7%E6%A0%A1%E9%AA%8C/" title="简单工厂+责任链模式实现任务完整性校验">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">简单工厂+责任链模式实现任务完整性校验</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/10/17/MySQL%20JSON%20Data%20Type/" title="MySQL JSON Data Type">
+                        <span class="hidden-mobile">MySQL JSON Data Type</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
