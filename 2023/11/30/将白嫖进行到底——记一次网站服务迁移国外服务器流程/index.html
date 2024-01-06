@@ -1,0 +1,731 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <link rel="icon" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yang Lei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="序言先简单介绍一下这个网站吧，域名是几年前在阿里云买的，当时也入手了个服务器用于部署毕设项目，为了能正常访问网站也是备案过一次，服务器到期之后就没管了，但一直有在续域名。 两个月前用域名搭了一个博客，服务器白嫖的Github Page，图床使用的阿里云的OSS。（重点：公开访问！） 运行了小两月都没什么事情，直到在V2看到有人OSS存储被盗刷，损失好几千，吓得我赶紧开通了阿里的CDN服务，把Buc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="将白嫖进行到底——记一次网站服务迁移国外服务器流程">
+<meta property="og:url" content="https://seeyourface.cn/2023/11/30/%E5%B0%86%E7%99%BD%E5%AB%96%E8%BF%9B%E8%A1%8C%E5%88%B0%E5%BA%95%E2%80%94%E2%80%94%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%BD%91%E7%AB%99%E6%9C%8D%E5%8A%A1%E8%BF%81%E7%A7%BB%E5%9B%BD%E5%A4%96%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%B5%81%E7%A8%8B/index.html">
+<meta property="og:site_name" content="Keinmal">
+<meta property="og:description" content="序言先简单介绍一下这个网站吧，域名是几年前在阿里云买的，当时也入手了个服务器用于部署毕设项目，为了能正常访问网站也是备案过一次，服务器到期之后就没管了，但一直有在续域名。 两个月前用域名搭了一个博客，服务器白嫖的Github Page，图床使用的阿里云的OSS。（重点：公开访问！） 运行了小两月都没什么事情，直到在V2看到有人OSS存储被盗刷，损失好几千，吓得我赶紧开通了阿里的CDN服务，把Buc">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/11/2831f367c963dcf89ec44173f06a6e3.jpg">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/11/image-20231130171713075.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/11/image-20231130174423601.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201092749937.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/11/image-20231130174840316.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201142023112.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201142431185.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201144323838.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201144613653.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201145728771.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201151642557.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201153943747.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201154051058.png">
+<meta property="og:image" content="https://image.seeyourface.cn/2023/12/image-20231201154115816.png">
+<meta property="article:published_time" content="2023-11-30T02:59:46.000Z">
+<meta property="article:modified_time" content="2024-01-06T04:49:15.639Z">
+<meta property="article:author" content="Yang Lei">
+<meta property="article:tag" content="CDN">
+<meta property="article:tag" content="图床">
+<meta property="article:tag" content="DNS">
+<meta property="article:tag" content="迁移">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://image.seeyourface.cn/2023/11/2831f367c963dcf89ec44173f06a6e3.jpg">
+  
+  
+  
+  <title>将白嫖进行到底——记一次网站服务迁移国外服务器流程 - Keinmal</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"seeyourface.cn","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":100,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Keinmal</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://image.seeyourface.cn/migrate/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="将白嫖进行到底——记一次网站服务迁移国外服务器流程"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-11-30 10:59" pubdate>
+          2023年11月30日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          13 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">将白嫖进行到底——记一次网站服务迁移国外服务器流程</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h3><p>先简单介绍一下这个网站吧，域名是几年前在阿里云买的，当时也入手了个服务器用于部署毕设项目，为了能正常访问网站也是备案过一次，服务器到期之后就没管了，但一直有在续域名。</p>
+<p>两个月前用域名搭了一个博客，服务器白嫖的<code>Github Page</code>，图床使用的阿里云的<code>OSS</code>。（重点：公开访问！）</p>
+<p>运行了小两月都没什么事情，直到在<code>V2</code>看到有人<code>OSS</code>存储被盗刷，损失好几千，吓得我赶紧开通了阿里的<code>CDN</code>服务，把<code>Bucket</code>私有化，然后用<code>CND</code>回源到<code>OSS</code>存储，给<code>CND</code>加上了各种流量控制，访问控制。</p>
+<p>正当我以为一切都是如此美妙的时候，阿里云给我发来了信息，不到一个小时就把<code>CND</code>域名下线了…</p>
+<p><img src="https://image.seeyourface.cn/2023/11/2831f367c963dcf89ec44173f06a6e3.jpg" srcset="/img/loading.gif" lazyload alt="2831f367c963dcf89ec44173f06a6e3"></p>
+<p>总之，只要将域名解析到了国内的空间就需要备案，否则就会限制域名无法访问。</p>
+<p>无奈于备案流程实在繁琐冗长，况且我这小小网站根本没有国内服务器，备案还需要另外花费金币购买服务码，既然如此，那就将白嫖进行到底！</p>
+<p>经过一番搜寻，我选择使用 <code>Backblzae b2</code> 作为图床，使用 <code>Cloudflare</code> 域名服务商做<code>DNS</code>解析和<code>CDN</code>代理工作。</p>
+<h3 id="Backblaze"><a href="#Backblaze" class="headerlink" title="Backblaze"></a>Backblaze</h3><h4 id="为什么选择B2"><a href="#为什么选择B2" class="headerlink" title="为什么选择B2"></a>为什么选择B2</h4><p>最主要的原因是它免费、便宜！</p>
+<p>存储前<code>10GB</code>内容完全免费，超过<code>10GB</code>的部分收取<code>6$/month</code>的费用。</p>
+<p>对于我来说<code>10GB</code>的存储容量绝对是够够的。</p>
+<h4 id="创建Bucket"><a href="#创建Bucket" class="headerlink" title="创建Bucket"></a>创建Bucket</h4><p>首先你需要注册一个账号，然后点击创建桶，填写<code>Bucket</code>名称，注意这个名称必须是唯一的。</p>
+<p>桶的访问权限设置为<code>Public</code>，剩余参数全部默认即可。</p>
+<p><img src="https://image.seeyourface.cn/2023/11/image-20231130171713075.png" srcset="/img/loading.gif" lazyload alt="image-20231130171713075"></p>
+<p>创建完之后CORS规则选择’与所有HTTPS来源共享此存储桶中的所有内容’。</p>
+<p><img src="https://image.seeyourface.cn/2023/11/image-20231130174423601.png" srcset="/img/loading.gif" lazyload alt="image-20231130174423601"></p>
+<p>桶设定默认是不缓存，我们可以设置资源过期时间：</p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201092749937.png" srcset="/img/loading.gif" lazyload alt="image-20231201092749937"></p>
+<p>点击上传&#x2F;下载按钮，随便上传一张图片，查看图片信息：</p>
+<p><img src="https://image.seeyourface.cn/2023/11/image-20231130174840316.png" srcset="/img/loading.gif" lazyload alt="image-20231130174840316"></p>
+<p>现在我们可以直接通过友好URL访问这张图片。</p>
+<p>记住友好URL中的域名部分，后续<code>Cloudflare</code>代理时需要用到。</p>
+<h4 id="Picgo配置默认图床"><a href="#Picgo配置默认图床" class="headerlink" title="Picgo配置默认图床"></a>Picgo配置默认图床</h4><p>如果不想每次上传文件都打开<code>Backblaze</code>网站，可以使用<code>Pigco</code>软件配置默认图床上传。</p>
+<h4 id="添加应用密钥"><a href="#添加应用密钥" class="headerlink" title="添加应用密钥"></a>添加应用密钥</h4><p>进入页面左侧<code>Application keys</code>点击 <code>Add a new Application Key</code>创建一个应用密钥，随便填写一个密钥名字然后选择要授权的<code>Bucket</code>和读写权限。</p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201142023112.png" srcset="/img/loading.gif" lazyload alt="image-20231201142023112"></p>
+<h4 id="配置Picgo"><a href="#配置Picgo" class="headerlink" title="配置Picgo"></a>配置Picgo</h4><p>插件设置中搜索<code>S3</code>下载安装<code>amazon s3 uploader</code>插件，填写刚才生成的应用密钥和ID，地区填写你的<code>Bucket Endpoint</code>第二部分的内容，例如我这里是<code>us-east-005</code>。自定义节点填写<code>Endpoint</code>，自定义域名可以帮助我们上传成功后将Endpoint的域名替换为我们自己的域名。</p>
+<p>配置完成就可以上传图片了。</p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201142431185.png" srcset="/img/loading.gif" lazyload alt="image-20231201142431185"></p>
+<h3 id="Cloudflare"><a href="#Cloudflare" class="headerlink" title="Cloudflare"></a>Cloudflare</h3><p>通过<code>Cloudflare</code>访问<code>Backblaze</code>的流量是完全免费的，只不过不绑定卡的话每天只有2500次免费请求。</p>
+<h4 id="添加域名"><a href="#添加域名" class="headerlink" title="添加域名"></a>添加域名</h4><p>如果你没有域名，可以购买一个域名，如果你已经有一个域名了，在页面左侧的<code>website</code>添加你的顶级域名到<code>Cloudflare</code>，然后在你的域名注册商将你的域名服务器修改为<code>Cloudflare</code>提供的服务器（一般是在域名管理中）。</p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201144323838.png" srcset="/img/loading.gif" lazyload alt="image-20231201144323838"></p>
+<h4 id="添加域名解析记录"><a href="#添加域名解析记录" class="headerlink" title="添加域名解析记录"></a>添加域名解析记录</h4><p>第一个表示将二级域名<code>image.seeyourface.cn</code>解析到<code>Backblaze</code>的图床节点，第二三条表示将<code>seeyourface.cn</code>和<code>www.seeyourface.cn</code>解析到<code>github page</code>。</p>
+<p>右边黄色的云朵表示<code>Cloudflare</code>将代理你的请求，例如做一些缓存策略等等。</p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201144613653.png" srcset="/img/loading.gif" lazyload alt="image-20231201144613653"></p>
+<h4 id="开启严格的SSL加密模式"><a href="#开启严格的SSL加密模式" class="headerlink" title="开启严格的SSL加密模式"></a>开启严格的SSL加密模式</h4><p>完成上面的步骤后，你可能无法访问你的图片和网站，因为图床是使用<code>https</code>访问的，<code>github page</code>如果开启了强制<code>https</code>访问，你可能会收到<code>301 Moved Permanently</code>的错误信息。</p>
+<p>这时候需要点击左侧的<code>SSL/TLS</code>页面，开启严格加密模式。第三个选项表示接受自签名证书，第四个表示只接受受信任的证书。</p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201145728771.png" srcset="/img/loading.gif" lazyload alt="image-20231201145728771"></p>
+<p>这时你才可以使用<code>https://image.yourdomain.com/file/&#123;bucketName&#125;/default.png</code>所示格式来访问你的图片。</p>
+<p>这种URL会暴露我们的<code>BucketName</code>，<code>Cloudflare</code>提供了<code>URL Path</code>的规则转换。</p>
+<h4 id="请求路径转换"><a href="#请求路径转换" class="headerlink" title="请求路径转换"></a>请求路径转换</h4><p>选择左侧：Rules -&gt; Transform Rules -&gt; Rewrite URL -&gt; Create Rule</p>
+<p>自定义过滤条件：</p>
+<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs tex">(http.host eq &quot;image.seeyourface.cn&quot; and http.request.uri.path ne &quot;/file/&#123;bucketName&#125;&quot;)<br></code></pre></td></tr></table></figure>
+
+<p>匹配成功则动态重写为：concat(“&#x2F;file&#x2F;{bucketName}”,http.request.uri.path)</p>
+<p>替换为你自己的域名和bucket名称</p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201151642557.png" srcset="/img/loading.gif" lazyload alt="image-20231201151642557"></p>
+<p>然后就可以通过你的域名 + 图片存储路径来访问你的图片，这样就隐藏了你的<code>Bucket</code>名称。</p>
+<h4 id="清除响应头"><a href="#清除响应头" class="headerlink" title="清除响应头"></a>清除响应头</h4><p>相同的页面选择<code>Modify Response header</code>页签，添加一条规则：</p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201153943747.png" srcset="/img/loading.gif" lazyload alt="image-20231201153943747"></p>
+<p>再添加一条规则，让你的<code>URL</code>可以在外部任意访问：</p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201154051058.png" srcset="/img/loading.gif" lazyload alt="image-20231201154051058"></p>
+<p><img src="https://image.seeyourface.cn/2023/12/image-20231201154115816.png" srcset="/img/loading.gif" lazyload alt="image-20231201154115816"></p>
+<h3 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h3><p>恭喜你，你已经完成所有操作，可以愉快访问你的网站了！</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><section class="footnotes"><div class="footnote-list"><ol><li><span id="fn:1" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://www.backblaze.com/blog/free-image-hosting-with-cloudflare-transform-rules-and-backblaze-b2/#:~:text=Backblaze%20only%20supports%20secure%20HTTPS%20connections%2C%20so%20the,Backblaze%20via%20HTTPS%2C%20and%20requires%20a%20CA-issued%20certificate">https://www.backblaze.com/blog/free-image-hosting-with-cloudflare-transform-rules-and-backblaze-b2/#:~:text=Backblaze%20only%20supports%20secure%20HTTPS%20connections%2C%20so%20the,Backblaze%20via%20HTTPS%2C%20and%20requires%20a%20CA-issued%20certificate</a>.
+<a href="#fnref:1" rev="footnote" class="footnote-backref"> ↩</a></span></span></li><li><span id="fn:2" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://developers.cloudflare.com/ssl/troubleshooting/too-many-redirects/">https://developers.cloudflare.com/ssl/troubleshooting/too-many-redirects/</a>
+<a href="#fnref:2" rev="footnote" class="footnote-backref"> ↩</a></span></span></li></ol></div></section>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%BD%91%E7%AB%99/" class="category-chain-item">网站</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E7%BD%91%E7%AB%99/%E8%BF%81%E7%A7%BB/" class="category-chain-item">迁移</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CDN/" class="print-no-link">#CDN</a>
+      
+        <a href="/tags/%E5%9B%BE%E5%BA%8A/" class="print-no-link">#图床</a>
+      
+        <a href="/tags/DNS/" class="print-no-link">#DNS</a>
+      
+        <a href="/tags/%E8%BF%81%E7%A7%BB/" class="print-no-link">#迁移</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>将白嫖进行到底——记一次网站服务迁移国外服务器流程</div>
+      <div>https://seeyourface.cn/2023/11/30/将白嫖进行到底——记一次网站服务迁移国外服务器流程/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yang Lei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年11月30日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/01/06/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%92%8C%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE%E6%A8%A1%E5%9E%8B/" title="JVM类加载器和双亲委派模型">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">JVM类加载器和双亲委派模型</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/11/16/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%88%87%E6%8D%A2%E8%81%94%E8%A1%A8%E6%9F%A5%E8%AF%A2%E8%A1%A8%E6%A0%BC%E6%89%80%E4%BD%BF%E7%94%A8%E7%9A%84Schema/" title="如何优雅切换联表查询表格所使用的Schema">
+                        <span class="hidden-mobile">如何优雅切换联表查询表格所使用的Schema</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
