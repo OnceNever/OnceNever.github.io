@@ -11,9 +11,9 @@ tags:
 
 ### ThreadLocal 面试复习：从线程隔离到过期 Key 清理
 
-最近复习 Java 并发时看了 JavaGuide 的 [ThreadLocal 详解](https://javaguide.cn/java/concurrent/threadlocal.html#threadlocalmap-set-%E5%8E%9F%E7%90%86%E5%9B%BE%E8%A7%A3)。这篇文章源码细节比较多，尤其是 `ThreadLocalMap` 的 `set()`、`get()`、过期 key 清理，看起来很容易绕进去。
+`ThreadLocal` 的源码细节比较多，尤其是 `ThreadLocalMap` 的 `set()`、`get()`、过期 key 清理，很容易看着看着就绕进去。
 
-如果是面试准备，我觉得不需要把每一行源码都背下来，更重要的是能讲清楚这几个问题：
+如果是面试准备，不需要把每一行源码都背下来，更重要的是能讲清楚这几个问题：
 
 - `ThreadLocal` 是什么，解决什么问题；
 - 数据到底存在哪里；
@@ -434,3 +434,9 @@ key 是 `ThreadLocal` 对象的弱引用，value 是业务数据的强引用。
 - 因为使用线性探测，清理时还要重新整理后续 Entry，不能简单置空了事。
 
 面试准备到这个程度，基本就能把 `ThreadLocal` 从“会用”讲到“理解底层原理”了。
+
+---
+
+### 参考资料
+
+- [JavaGuide：ThreadLocal 详解](https://javaguide.cn/java/concurrent/threadlocal.html#threadlocalmap-set-%E5%8E%9F%E7%90%86%E5%9B%BE%E8%A7%A3)
