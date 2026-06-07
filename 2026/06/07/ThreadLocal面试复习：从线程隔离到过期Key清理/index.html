@@ -1,0 +1,867 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <link rel="icon" href="https://image.seeyourface.cn/migrate/pixel.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yang Lei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="ThreadLocal 面试复习：从线程隔离到过期 Key 清理最近复习 Java 并发时看了 JavaGuide 的 ThreadLocal 详解。这篇文章源码细节比较多，尤其是 ThreadLocalMap 的 set()、get()、过期 key 清理，看起来很容易绕进去。 如果是面试准备，我觉得不需要把每一行源码都背下来，更重要的是能讲清楚这几个问题：  ThreadLocal 是什么，解">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ThreadLocal 面试复习：从线程隔离到过期 Key 清理">
+<meta property="og:url" content="https://seeyourface.cn/2026/06/07/ThreadLocal%E9%9D%A2%E8%AF%95%E5%A4%8D%E4%B9%A0%EF%BC%9A%E4%BB%8E%E7%BA%BF%E7%A8%8B%E9%9A%94%E7%A6%BB%E5%88%B0%E8%BF%87%E6%9C%9FKey%E6%B8%85%E7%90%86/index.html">
+<meta property="og:site_name" content="seeyourface">
+<meta property="og:description" content="ThreadLocal 面试复习：从线程隔离到过期 Key 清理最近复习 Java 并发时看了 JavaGuide 的 ThreadLocal 详解。这篇文章源码细节比较多，尤其是 ThreadLocalMap 的 set()、get()、过期 key 清理，看起来很容易绕进去。 如果是面试准备，我觉得不需要把每一行源码都背下来，更重要的是能讲清楚这几个问题：  ThreadLocal 是什么，解">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-06-07T05:35:14.000Z">
+<meta property="article:modified_time" content="2026-06-07T05:45:51.418Z">
+<meta property="article:author" content="Yang Lei">
+<meta property="article:tag" content="ThreadLocal">
+<meta property="article:tag" content="ThreadLocalMap">
+<meta property="article:tag" content="Java并发">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>ThreadLocal 面试复习：从线程隔离到过期 Key 清理 - seeyourface</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"seeyourface.cn","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":100,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>懒大王</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://image.seeyourface.cn/migrate/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="ThreadLocal 面试复习：从线程隔离到过期 Key 清理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-06-07 13:35" pubdate>
+          2026年6月7日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          36 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">ThreadLocal 面试复习：从线程隔离到过期 Key 清理</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="ThreadLocal-面试复习：从线程隔离到过期-Key-清理"><a href="#ThreadLocal-面试复习：从线程隔离到过期-Key-清理" class="headerlink" title="ThreadLocal 面试复习：从线程隔离到过期 Key 清理"></a>ThreadLocal 面试复习：从线程隔离到过期 Key 清理</h3><p>最近复习 Java 并发时看了 JavaGuide 的 <a target="_blank" rel="noopener" href="https://javaguide.cn/java/concurrent/threadlocal.html#threadlocalmap-set-%E5%8E%9F%E7%90%86%E5%9B%BE%E8%A7%A3">ThreadLocal 详解</a>。这篇文章源码细节比较多，尤其是 <code>ThreadLocalMap</code> 的 <code>set()</code>、<code>get()</code>、过期 key 清理，看起来很容易绕进去。</p>
+<p>如果是面试准备，我觉得不需要把每一行源码都背下来，更重要的是能讲清楚这几个问题：</p>
+<ul>
+<li><code>ThreadLocal</code> 是什么，解决什么问题；</li>
+<li>数据到底存在哪里；</li>
+<li>为什么 <code>ThreadLocalMap</code> 的 key 要设计成弱引用；</li>
+<li>为什么还会发生内存泄漏；</li>
+<li>过期 key 是怎么被清理的；</li>
+<li>项目中应该怎么安全使用。</li>
+</ul>
+<hr>
+<h3 id="一句话说清楚-ThreadLocal"><a href="#一句话说清楚-ThreadLocal" class="headerlink" title="一句话说清楚 ThreadLocal"></a>一句话说清楚 ThreadLocal</h3><p><code>ThreadLocal</code> 可以理解为线程级别的变量副本。</p>
+<p>同一个 <code>ThreadLocal</code> 对象，在不同线程中访问到的是各自线程内部保存的值。线程之间互不共享，所以它不是通过加锁解决线程安全问题，而是通过<strong>线程隔离</strong>避免共享数据竞争。</p>
+<p>面试时可以这样回答：</p>
+<blockquote>
+<p><code>ThreadLocal</code> 是 JDK 提供的一种线程局部变量机制。每个线程内部都有一个 <code>ThreadLocalMap</code>，<code>ThreadLocal</code> 作为 key，线程自己的变量副本作为 value。不同线程访问同一个 <code>ThreadLocal</code> 时，实际读写的是各自线程内部 Map 中的值，所以可以实现线程隔离。</p>
+</blockquote>
+<p>注意这句话里有一个关键点：<strong>数据不是存在 <code>ThreadLocal</code> 对象里，而是存在当前线程的 <code>ThreadLocalMap</code> 里。</strong></p>
+<hr>
+<h3 id="ThreadLocal-适合解决什么问题？"><a href="#ThreadLocal-适合解决什么问题？" class="headerlink" title="ThreadLocal 适合解决什么问题？"></a>ThreadLocal 适合解决什么问题？</h3><p><code>ThreadLocal</code> 适合保存和当前线程强相关、需要在同一个调用链中传递的上下文信息。</p>
+<p>常见场景有：</p>
+<ul>
+<li>保存用户上下文，比如当前登录用户 ID；</li>
+<li>保存请求链路追踪 ID，比如 <code>traceId</code>、<code>requestId</code>；</li>
+<li>日志框架中的 MDC；</li>
+<li>数据库连接、事务上下文；</li>
+<li>避免某些对象频繁创建，例如 <code>SimpleDateFormat</code> 的旧版本线程不安全问题。</li>
+</ul>
+<p>但是它不适合做跨线程数据传递。因为 <code>ThreadLocal</code> 的核心语义就是“线程隔离”，子线程默认拿不到父线程的 <code>ThreadLocal</code> 值。即使用 <code>InheritableThreadLocal</code>，在线程池场景下也容易出问题，因为线程池里的线程会复用，不一定每次都是新建线程。</p>
+<hr>
+<h3 id="ThreadLocal-的数据结构"><a href="#ThreadLocal-的数据结构" class="headerlink" title="ThreadLocal 的数据结构"></a>ThreadLocal 的数据结构</h3><p>每个 <code>Thread</code> 对象内部都有一个字段：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java">ThreadLocal.<span class="hljs-type">ThreadLocalMap</span> <span class="hljs-variable">threadLocals</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;<br></code></pre></td></tr></table></figure>
+
+<p>当我们调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java">threadLocal.set(value);<br></code></pre></td></tr></table></figure>
+
+<p>大致流程是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-type">Thread</span> <span class="hljs-variable">t</span> <span class="hljs-operator">=</span> Thread.currentThread();<br><span class="hljs-type">ThreadLocalMap</span> <span class="hljs-variable">map</span> <span class="hljs-operator">=</span> getMap(t);<br><span class="hljs-keyword">if</span> (map != <span class="hljs-literal">null</span>) &#123;<br>    map.set(<span class="hljs-built_in">this</span>, value);<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    createMap(t, value);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>也就是说：</p>
+<ul>
+<li><code>ThreadLocal</code> 负责提供 <code>set()</code>、<code>get()</code>、<code>remove()</code> 这些操作入口；</li>
+<li>当前线程 <code>Thread</code> 负责持有自己的 <code>ThreadLocalMap</code>；</li>
+<li><code>ThreadLocalMap</code> 里保存真正的数据；</li>
+<li><code>key</code> 是 <code>ThreadLocal</code>；</li>
+<li><code>value</code> 是业务数据。</li>
+</ul>
+<p>可以用一个简单图示理解：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs text">Thread-1<br>  └── threadLocals(ThreadLocalMap)<br>        ├── Entry(ThreadLocalA -&gt; valueA1)<br>        └── Entry(ThreadLocalB -&gt; valueB1)<br><br>Thread-2<br>  └── threadLocals(ThreadLocalMap)<br>        ├── Entry(ThreadLocalA -&gt; valueA2)<br>        └── Entry(ThreadLocalB -&gt; valueB2)<br></code></pre></td></tr></table></figure>
+
+<p>同一个 <code>ThreadLocalA</code>，在不同线程的 <code>ThreadLocalMap</code> 中对应不同 value，这就是线程隔离的来源。</p>
+<hr>
+<h3 id="ThreadLocalMap-和-HashMap-有什么不同？"><a href="#ThreadLocalMap-和-HashMap-有什么不同？" class="headerlink" title="ThreadLocalMap 和 HashMap 有什么不同？"></a>ThreadLocalMap 和 HashMap 有什么不同？</h3><p><code>ThreadLocalMap</code> 也是数组结构，但它不是普通的 <code>HashMap</code>。</p>
+<p>普通 <code>HashMap</code> 解决 hash 冲突通常使用链表或红黑树，而 <code>ThreadLocalMap</code> 使用的是<strong>开放寻址法中的线性探测</strong>。</p>
+<p>什么意思呢？</p>
+<p>假设某个 <code>ThreadLocal</code> 算出来应该放在数组下标 4，但是下标 4 已经有数据了，那它不会在 4 后面挂链表，而是继续找 5、6、7……直到找到一个空槽位。</p>
+<p>简化理解：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">理想位置是 4<br><br>下标: 0 1 2 3 4 5 6 7<br>数据: - - - - A B - -<br><br>新数据也想放 4，但 4 已经有 A<br>于是往后找，发现 6 是空的，就放到 6<br></code></pre></td></tr></table></figure>
+
+<p>这也解释了为什么 <code>ThreadLocalMap</code> 清理过期 key 时，不只是把当前位置置空这么简单。因为如果直接置空，可能会破坏线性探测形成的查找链，导致后面的正常数据查不到。</p>
+<hr>
+<h3 id="为什么-key-要用弱引用？"><a href="#为什么-key-要用弱引用？" class="headerlink" title="为什么 key 要用弱引用？"></a>为什么 key 要用弱引用？</h3><p><code>ThreadLocalMap.Entry</code> 的源码大致是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Entry</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">WeakReference</span>&lt;ThreadLocal&lt;?&gt;&gt; &#123;<br>    Object value;<br><br>    Entry(ThreadLocal&lt;?&gt; k, Object v) &#123;<br>        <span class="hljs-built_in">super</span>(k);<br>        value = v;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>也就是说：</p>
+<ul>
+<li><code>Entry</code> 的 key 是 <code>ThreadLocal</code> 的弱引用；</li>
+<li><code>Entry</code> 的 value 是强引用。</li>
+</ul>
+<p>弱引用的特点是：只要一次 GC 发生，并且这个对象没有其他强引用，那么弱引用指向的对象就会被回收。</p>
+<p>为什么要这么设计？</p>
+<p>因为如果 key 是强引用，就可能出现这样的引用链：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">Thread -&gt; ThreadLocalMap -&gt; Entry -&gt; ThreadLocal(key)<br></code></pre></td></tr></table></figure>
+
+<p>只要线程不结束，<code>ThreadLocalMap</code> 就一直存在，<code>ThreadLocal</code> 对象也会一直被 key 强引用着，无法回收。</p>
+<p>而 key 使用弱引用后，如果业务代码里已经没有变量再引用这个 <code>ThreadLocal</code>，GC 后 key 就可以变成 <code>null</code>。这样至少 <code>ThreadLocal</code> 对象本身不会因为 <code>ThreadLocalMap</code> 而泄漏。</p>
+<hr>
+<h3 id="key-都是弱引用了，为什么还会内存泄漏？"><a href="#key-都是弱引用了，为什么还会内存泄漏？" class="headerlink" title="key 都是弱引用了，为什么还会内存泄漏？"></a>key 都是弱引用了，为什么还会内存泄漏？</h3><p>这是 ThreadLocal 面试里最高频的问题之一。</p>
+<p>原因在于：<strong>key 是弱引用，但 value 仍然是强引用。</strong></p>
+<p>当 <code>ThreadLocal</code> 外部强引用消失后，GC 会把 key 回收掉，于是 <code>ThreadLocalMap</code> 里会出现这样的 Entry：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">Entry(null -&gt; value)<br></code></pre></td></tr></table></figure>
+
+<p>这个 <code>Entry</code> 的 key 已经没了，但 value 还在，而且 value 的引用链仍然存在：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">Thread -&gt; ThreadLocalMap -&gt; Entry -&gt; value<br></code></pre></td></tr></table></figure>
+
+<p>如果当前线程很快结束，那么问题不大，线程对象被回收，整个 <code>ThreadLocalMap</code> 和 value 都会被回收。</p>
+<p>但在线程池中，工作线程通常会长期存活。只要线程不结束，<code>ThreadLocalMap</code> 就可能一直存在，<code>Entry(null -&gt; value)</code> 也可能一直占着内存。这就是 <code>ThreadLocal</code> 内存泄漏的根源。</p>
+<p>所以面试里可以这样答：</p>
+<blockquote>
+<p><code>ThreadLocalMap</code> 的 key 是弱引用，GC 后 key 可能变成 null，但 value 是强引用，仍然被 <code>Thread -&gt; ThreadLocalMap -&gt; Entry -&gt; value</code> 这条链路引用。如果线程长期不结束，比如线程池场景，并且没有及时清理这个 Entry，value 就无法被 GC，可能造成内存泄漏。</p>
+</blockquote>
+<hr>
+<h3 id="过期-key-是什么？"><a href="#过期-key-是什么？" class="headerlink" title="过期 key 是什么？"></a>过期 key 是什么？</h3><p>所谓过期 key，指的就是 <code>Entry</code> 里的 <code>key</code> 已经被 GC 回收，变成了 <code>null</code>。</p>
+<p>也就是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">正常 Entry：ThreadLocal 对象 -&gt; value<br>过期 Entry：null -&gt; value<br></code></pre></td></tr></table></figure>
+
+<p>源码里通常称这种 Entry 为 <code>stale entry</code>，可以理解为“陈旧的、失效的 Entry”。</p>
+<hr>
+<h3 id="过期-key-的清理：先记住一句话"><a href="#过期-key-的清理：先记住一句话" class="headerlink" title="过期 key 的清理：先记住一句话"></a>过期 key 的清理：先记住一句话</h3><p><code>ThreadLocalMap</code> 不会有一个后台线程专门清理过期 key，它采用的是<strong>惰性清理</strong>。</p>
+<p>也就是说，只有当你调用 <code>get()</code>、<code>set()</code>、<code>remove()</code> 这些方法时，才可能顺便触发清理。</p>
+<p>面试回答可以先说这个主线：</p>
+<blockquote>
+<p><code>ThreadLocalMap</code> 对过期 key 的清理是惰性的。<code>get()</code>、<code>set()</code>、<code>remove()</code> 操作过程中，如果发现某个 Entry 的 key 已经是 null，就会调用清理逻辑，把这个 Entry 的 value 置空、数组槽位置空，并对后续因为线性探测产生冲突的 Entry 做重新定位，避免查找链断裂。</p>
+</blockquote>
+<p>这句话已经能覆盖面试中大部分问题。</p>
+<hr>
+<h3 id="通俗理解-expungeStaleEntry"><a href="#通俗理解-expungeStaleEntry" class="headerlink" title="通俗理解 expungeStaleEntry"></a>通俗理解 expungeStaleEntry</h3><p><code>expungeStaleEntry()</code> 是清理过期 Entry 的核心方法。</p>
+<p>这个方法可以通俗理解成：</p>
+<blockquote>
+<p>从发现垃圾的位置开始，先把这个垃圾桶清空，然后沿着数组继续往后检查。遇到新的垃圾继续清理，遇到正常数据就判断它是不是因为 hash 冲突才被挤到当前位置，如果是，就尽量把它搬回更合适的位置。</p>
+</blockquote>
+<p>为什么要“搬家”？</p>
+<p>因为 <code>ThreadLocalMap</code> 使用线性探测。举个例子：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">下标: 0 1 2 3 4 5 6 7<br>数据: - - - - A X B -<br></code></pre></td></tr></table></figure>
+
+<p>假设：</p>
+<ul>
+<li>A 的理想位置是 4；</li>
+<li>X 是过期 Entry，key 已经是 null；</li>
+<li>B 的理想位置也是 4，但因为 4、5 被占了，所以当初被放到了 6。</li>
+</ul>
+<p>如果清理 X 时只是把 5 号位置置空，会变成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">下标: 0 1 2 3 4 5 6 7<br>数据: - - - - A - B -<br></code></pre></td></tr></table></figure>
+
+<p>这时如果查找 B，会从理想位置 4 开始找：</p>
+<ol>
+<li>看 4，是 A，不是 B；</li>
+<li>往后看 5，发现是空；</li>
+<li>线性探测认为“遇到空就说明后面没有了”，于是停止查找；</li>
+<li>结果 B 明明在 6，却查不到了。</li>
+</ol>
+<p>所以 <code>expungeStaleEntry()</code> 不能只清理过期槽位，还要把后面受影响的数据重新整理一下。</p>
+<p>整理后的效果类似：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">下标: 0 1 2 3 4 5 6 7<br>数据: - - - - A B - -<br></code></pre></td></tr></table></figure>
+
+<p>B 被搬到更靠近理想位置的地方，查找链恢复正常。</p>
+<p>因此，<code>expungeStaleEntry()</code> 做了三件事：</p>
+<ol>
+<li>清理当前过期 Entry：<code>value = null</code>，数组槽位设为 <code>null</code>，<code>size--</code>；</li>
+<li>从当前位置继续向后扫描，直到遇到空槽位停止；</li>
+<li>扫描过程中如果又遇到过期 Entry，继续清理；如果遇到正常 Entry，就重新计算它应该在的位置，必要时重新放置。</li>
+</ol>
+<hr>
+<h3 id="set-时怎么清理过期-key？"><a href="#set-时怎么清理过期-key？" class="headerlink" title="set() 时怎么清理过期 key？"></a>set() 时怎么清理过期 key？</h3><p><code>set()</code> 的主流程可以简化成下面几种情况：</p>
+<h4 id="1-理想槽位为空"><a href="#1-理想槽位为空" class="headerlink" title="1. 理想槽位为空"></a>1. 理想槽位为空</h4><p>直接把新 Entry 放进去。</p>
+<p>放完之后，会调用 <code>cleanSomeSlots()</code> 做一次启发式清理，也就是顺便向后扫一小段，看有没有过期 Entry。</p>
+<h4 id="2-理想槽位不为空，并且-key-相同"><a href="#2-理想槽位不为空，并且-key-相同" class="headerlink" title="2. 理想槽位不为空，并且 key 相同"></a>2. 理想槽位不为空，并且 key 相同</h4><p>说明是更新已有值，直接覆盖 value。</p>
+<h4 id="3-理想槽位不为空，但-key-不同"><a href="#3-理想槽位不为空，但-key-不同" class="headerlink" title="3. 理想槽位不为空，但 key 不同"></a>3. 理想槽位不为空，但 key 不同</h4><p>说明发生了 hash 冲突，需要继续向后线性探测。</p>
+<p>探测过程中可能遇到两种情况：</p>
+<ul>
+<li>遇到相同 key：更新 value；</li>
+<li>遇到 <code>key == null</code>：说明遇到了过期 Entry，此时会调用 <code>replaceStaleEntry()</code>。</li>
+</ul>
+<p><code>replaceStaleEntry()</code> 可以理解为“复用过期槽位 + 清理周边垃圾”。它会把新数据放到这个过期槽位上，同时尝试清理附近其他过期 Entry。</p>
+<p>面试里不一定要背 <code>replaceStaleEntry()</code> 的完整源码，只要能说出核心目的：</p>
+<blockquote>
+<p><code>set()</code> 过程中如果发现过期 Entry，会优先复用这个槽位存放新值，并触发清理逻辑，清掉周围 key 为 null 的 Entry，避免无效 value 长期占用内存。</p>
+</blockquote>
+<hr>
+<h3 id="get-时怎么清理过期-key？"><a href="#get-时怎么清理过期-key？" class="headerlink" title="get() 时怎么清理过期 key？"></a>get() 时怎么清理过期 key？</h3><p><code>get()</code> 的流程相对简单。</p>
+<p>它会先根据当前 <code>ThreadLocal</code> 的 hash 值定位到理想槽位：</p>
+<ul>
+<li>如果槽位中的 key 正好是当前 <code>ThreadLocal</code>，直接返回 value；</li>
+<li>如果不是，就说明可能发生了 hash 冲突，需要向后找；</li>
+<li>向后找的过程中，如果遇到 <code>key == null</code> 的 Entry，就调用 <code>expungeStaleEntry()</code> 清理。</li>
+</ul>
+<p>所以 <code>get()</code> 不是每次都会清理。只有在查找过程中发生 miss，并且碰到过期 Entry 时，才会触发清理。</p>
+<p>这也是为什么 <code>ThreadLocal</code> 不能完全依赖自动清理来避免泄漏。</p>
+<p>如果某些过期 Entry 所在位置之后再也没有被访问到，那么它可能长时间留在 Map 中。</p>
+<hr>
+<h3 id="remove-为什么最可靠？"><a href="#remove-为什么最可靠？" class="headerlink" title="remove() 为什么最可靠？"></a>remove() 为什么最可靠？</h3><p><code>remove()</code> 是最直接的清理方式。</p>
+<p>调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java">threadLocal.remove();<br></code></pre></td></tr></table></figure>
+
+<p>会从当前线程的 <code>ThreadLocalMap</code> 中移除当前 <code>ThreadLocal</code> 对应的 Entry，并触发相关清理。</p>
+<p>和被动等待 <code>get()</code>、<code>set()</code> 时顺便清理相比，<code>remove()</code> 是主动清理。尤其在线程池场景下，线程会被复用，如果不调用 <code>remove()</code>，上一次任务留下的数据可能影响下一次任务，也可能造成内存泄漏。</p>
+<p>推荐写法是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> ThreadLocal&lt;String&gt; TRACE_ID = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ThreadLocal</span>&lt;&gt;();<br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">handleRequest</span><span class="hljs-params">(String traceId)</span> &#123;<br>    <span class="hljs-keyword">try</span> &#123;<br>        TRACE_ID.set(traceId);<br>        <span class="hljs-comment">// 业务逻辑</span><br>    &#125; <span class="hljs-keyword">finally</span> &#123;<br>        TRACE_ID.remove();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>重点是：<strong>set 之后，一定要在 finally 里 remove。</strong></p>
+<hr>
+<h3 id="高频面试题整理"><a href="#高频面试题整理" class="headerlink" title="高频面试题整理"></a>高频面试题整理</h3><h4 id="1-ThreadLocal-的原理是什么？"><a href="#1-ThreadLocal-的原理是什么？" class="headerlink" title="1. ThreadLocal 的原理是什么？"></a>1. ThreadLocal 的原理是什么？</h4><p>每个线程内部都有一个 <code>ThreadLocalMap</code>，<code>ThreadLocal</code> 作为 key，业务对象作为 value。调用 <code>set()</code>、<code>get()</code> 时，先拿到当前线程，再操作当前线程自己的 <code>ThreadLocalMap</code>，所以不同线程之间的数据互不影响。</p>
+<h4 id="2-ThreadLocal-的数据存在哪里？"><a href="#2-ThreadLocal-的数据存在哪里？" class="headerlink" title="2. ThreadLocal 的数据存在哪里？"></a>2. ThreadLocal 的数据存在哪里？</h4><p>存在当前线程对象的 <code>ThreadLocalMap</code> 中，不是存在 <code>ThreadLocal</code> 对象本身。</p>
+<h4 id="3-ThreadLocalMap-的-key-和-value-分别是什么？"><a href="#3-ThreadLocalMap-的-key-和-value-分别是什么？" class="headerlink" title="3. ThreadLocalMap 的 key 和 value 分别是什么？"></a>3. ThreadLocalMap 的 key 和 value 分别是什么？</h4><p>key 是 <code>ThreadLocal</code> 对象的弱引用，value 是业务数据的强引用。</p>
+<h4 id="4-为什么-key-要设计成弱引用？"><a href="#4-为什么-key-要设计成弱引用？" class="headerlink" title="4. 为什么 key 要设计成弱引用？"></a>4. 为什么 key 要设计成弱引用？</h4><p>为了避免 <code>ThreadLocalMap</code> 强引用 <code>ThreadLocal</code>，导致业务代码已经不再使用的 <code>ThreadLocal</code> 仍然无法被 GC。弱引用可以让没有外部强引用的 <code>ThreadLocal</code> 在 GC 时被回收。</p>
+<h4 id="5-为什么-key-是弱引用还会内存泄漏？"><a href="#5-为什么-key-是弱引用还会内存泄漏？" class="headerlink" title="5. 为什么 key 是弱引用还会内存泄漏？"></a>5. 为什么 key 是弱引用还会内存泄漏？</h4><p>因为 value 是强引用。GC 后 key 可能变成 null，但 value 仍然被 <code>Thread -&gt; ThreadLocalMap -&gt; Entry -&gt; value</code> 引用。线程池中的线程长期存活时，value 可能长期无法回收。</p>
+<h4 id="6-过期-key-是怎么清理的？"><a href="#6-过期-key-是怎么清理的？" class="headerlink" title="6. 过期 key 是怎么清理的？"></a>6. 过期 key 是怎么清理的？</h4><p><code>ThreadLocalMap</code> 采用惰性清理。调用 <code>get()</code>、<code>set()</code>、<code>remove()</code> 时，如果发现 <code>Entry.key == null</code>，会清理这个 Entry，并在线性探测范围内继续扫描，清理其他过期 Entry，同时对正常 Entry 重新定位，避免破坏查找链。</p>
+<h4 id="7-ThreadLocalMap-怎么解决-Hash-冲突？"><a href="#7-ThreadLocalMap-怎么解决-Hash-冲突？" class="headerlink" title="7. ThreadLocalMap 怎么解决 Hash 冲突？"></a>7. ThreadLocalMap 怎么解决 Hash 冲突？</h4><p>使用线性探测法。hash 冲突时，不使用链表，而是向后寻找下一个可用槽位。</p>
+<h4 id="8-为什么清理过期-Entry-后还要重新定位后面的-Entry？"><a href="#8-为什么清理过期-Entry-后还要重新定位后面的-Entry？" class="headerlink" title="8. 为什么清理过期 Entry 后还要重新定位后面的 Entry？"></a>8. 为什么清理过期 Entry 后还要重新定位后面的 Entry？</h4><p>因为线性探测依赖连续的查找链。如果中间某个槽位被直接置空，后面的 Entry 可能再也查不到。重新定位可以保证后续 Entry 仍然能被正确查找。</p>
+<h4 id="9-ThreadLocal-在项目中怎么避免问题？"><a href="#9-ThreadLocal-在项目中怎么避免问题？" class="headerlink" title="9. ThreadLocal 在项目中怎么避免问题？"></a>9. ThreadLocal 在项目中怎么避免问题？</h4><ul>
+<li>尽量定义为 <code>private static final</code>；</li>
+<li>使用后在 <code>finally</code> 中调用 <code>remove()</code>；</li>
+<li>在线程池场景特别注意清理；</li>
+<li>不要用它做跨线程传值；</li>
+<li>异步任务需要传递上下文时，考虑显式传参、包装任务，或者使用 TransmittableThreadLocal 等工具。</li>
+</ul>
+<hr>
+<h3 id="面试回答模板"><a href="#面试回答模板" class="headerlink" title="面试回答模板"></a>面试回答模板</h3><p>如果面试官问：<strong>讲讲 ThreadLocal，以及它的内存泄漏问题。</strong></p>
+<p>可以这样答：</p>
+<blockquote>
+<p><code>ThreadLocal</code> 是线程局部变量工具。每个线程内部都有一个 <code>ThreadLocalMap</code>，<code>ThreadLocal</code> 作为 key，业务对象作为 value。调用 <code>get()</code>、<code>set()</code> 时，实际操作的是当前线程自己的 Map，所以可以实现线程隔离。</p>
+<p><code>ThreadLocalMap</code> 的 key 是弱引用，value 是强引用。key 使用弱引用是为了避免业务代码不再引用 <code>ThreadLocal</code> 后，它还被 Map 强引用导致无法回收。但这也带来一个问题：GC 后 key 可能变成 null，而 value 仍然被线程的 <code>ThreadLocalMap</code> 强引用。如果线程长期存活，比如线程池线程，就可能造成 value 无法释放，也就是内存泄漏。</p>
+<p>JDK 内部在 <code>get()</code>、<code>set()</code>、<code>remove()</code> 时会做惰性清理，发现 key 为 null 的 Entry 后，会把 value 置空、槽位置空，并对线性探测范围内的 Entry 做重新整理。但这种清理不是实时的，也不是一定会触发。所以项目里使用 ThreadLocal 后，最好在 <code>finally</code> 中主动调用 <code>remove()</code>。</p>
+</blockquote>
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><code>ThreadLocal</code> 的核心并不复杂：它通过“每个线程持有自己的 <code>ThreadLocalMap</code>”实现线程隔离。</p>
+<p>真正容易被问深的是 <code>ThreadLocalMap</code>：</p>
+<ul>
+<li>key 是弱引用，value 是强引用；</li>
+<li>key 被 GC 后会形成 <code>null -&gt; value</code> 的过期 Entry；</li>
+<li>线程池线程长期存活时，value 可能泄漏；</li>
+<li>清理过期 key 是惰性的，依赖 <code>get()</code>、<code>set()</code>、<code>remove()</code> 触发；</li>
+<li>因为使用线性探测，清理时还要重新整理后续 Entry，不能简单置空了事。</li>
+</ul>
+<p>面试准备到这个程度，基本就能把 <code>ThreadLocal</code> 从“会用”讲到“理解底层原理”了。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/JAVA/" class="category-chain-item">JAVA</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/JAVA/%E5%B9%B6%E5%8F%91/" class="category-chain-item">并发</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/ThreadLocal/" class="print-no-link">#ThreadLocal</a>
+      
+        <a href="/tags/ThreadLocalMap/" class="print-no-link">#ThreadLocalMap</a>
+      
+        <a href="/tags/Java%E5%B9%B6%E5%8F%91/" class="print-no-link">#Java并发</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>ThreadLocal 面试复习：从线程隔离到过期 Key 清理</div>
+      <div>https://seeyourface.cn/2026/06/07/ThreadLocal面试复习：从线程隔离到过期Key清理/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yang Lei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年6月7日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/06/05/AQS%E9%9D%A2%E8%AF%95%E5%A4%8D%E4%B9%A0%EF%BC%9A%E4%BB%8E%E9%98%9F%E5%88%97%E5%90%8C%E6%AD%A5%E5%99%A8%E5%88%B0%E5%B8%B8%E8%A7%81%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7/" title="AQS 面试复习：从队列同步器到常见并发工具">
+                        <span class="hidden-mobile">AQS 面试复习：从队列同步器到常见并发工具</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
